@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Database credentials / secrets
+*.cnf
+*.env
+users/users_with_passwords.sql
+users/*_with_passwords.sql
+
+# Local DB dumps
+*.sql.gz
+dumps/
