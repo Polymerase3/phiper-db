@@ -117,6 +117,7 @@ CREATE TABLE samples (
     sample_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     visit_id BIGINT UNSIGNED NOT NULL,
     sample_name VARCHAR(100) NOT NULL,
+    sample_type ENUM('sample', 'mockIP', 'input', 'anchor') NOT NULL,
     SQR VARCHAR(10) NOT NULL,
     SQRP VARCHAR(10) NOT NULL,
     library VARCHAR(50) NOT NULL,
@@ -230,4 +231,55 @@ CREATE TABLE sample_metadata (
     UNIQUE KEY uq_sample_metadata_sample_key (sample_id, key_name),
     KEY idx_sample_metadata_sample_id (sample_id),
     KEY idx_sample_metadata_key_name (key_name)
+) ENGINE=InnoDB;
+
+
+-- =========================================================
+-- Table 7: sample_files
+-- Tracks files associated with samples
+-- (FASTQ, BAM, counts, normalized data)
+-- =========================================================
+CREATE TABLE sample_files (
+    file_id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    sample_id         BIGINT UNSIGNED NOT NULL,
+
+    file_type         ENUM(
+                        'fastq_r1',
+                        'fastq_r2',
+                        'fastq_single',
+                        'bam',
+                        'counts',
+                        'beer_norm',
+                        'zigp_norm',
+                        'edger_norm'
+                      ) NOT NULL,
+
+    file_path         VARCHAR(1024) NOT NULL,
+    file_size_bytes   BIGINT UNSIGNED NULL,
+    checksum_md5      CHAR(32) NULL,
+
+    storage_tier      ENUM('work', 'archive', 'scratch', 'external') NOT NULL DEFAULT 'work',
+
+    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (file_id),
+
+    CONSTRAINT fk_sample_files_sample
+        FOREIGN KEY (sample_id)
+        REFERENCES samples(sample_id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+
+    CONSTRAINT uq_sample_files_path
+        UNIQUE (file_path),
+
+    CONSTRAINT chk_sample_files_path_absolute
+        CHECK (file_path LIKE '/%'),
+
+    CONSTRAINT chk_sample_files_md5_format
+        CHECK (checksum_md5 IS NULL OR checksum_md5 REGEXP '^[a-f0-9]{32}$'),
+
+    KEY idx_sample_files_sample (sample_id),
+    KEY idx_sample_files_type   (file_type),
+    KEY idx_sample_files_tier   (storage_tier)
 ) ENGINE=InnoDB;
