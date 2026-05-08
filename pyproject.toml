@@ -13,6 +13,7 @@ authors = [
 ]
 dependencies = [
     "mariadb>=1.1.10",
+    "sshtunnel>=0.4.0",
 ]
 
 [project.optional-dependencies]
