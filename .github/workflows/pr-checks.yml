@@ -1,0 +1,54 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  version-and-changelog:
+    name: Version bump + NEWS.md entry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify version bump and NEWS.md entry
+        run: |
+          set -euo pipefail
+          BASE_REF="origin/${{ github.base_ref }}"
+
+          extract_version() { grep -E '^version = ' "$1" | head -1 | sed -E 's/version = "(.*)"/\1/'; }
+
+          BASE_VERSION=$(git show "$BASE_REF":pyproject.toml | grep -E '^version = ' | head -1 | sed -E 's/version = "(.*)"/\1/')
+          PR_VERSION=$(extract_version pyproject.toml)
+
+          echo "Base version: $BASE_VERSION"
+          echo "PR version:   $PR_VERSION"
+
+          if [ -z "$PR_VERSION" ]; then
+            echo "::error file=pyproject.toml::Cannot read version from pyproject.toml"
+            exit 1
+          fi
+
+          if [ "$BASE_VERSION" = "$PR_VERSION" ]; then
+            echo "::error file=pyproject.toml::Version was not bumped (still $PR_VERSION). Increment it in pyproject.toml."
+            exit 1
+          fi
+
+          if [ ! -f NEWS.md ]; then
+            echo "::error file=NEWS.md::NEWS.md is missing."
+            exit 1
+          fi
+
+          if ! grep -qE "^## \[?${PR_VERSION}\]?" NEWS.md; then
+            echo "::error file=NEWS.md::No entry for version $PR_VERSION. Add a '## [$PR_VERSION] - YYYY-MM-DD' section."
+            exit 1
+          fi
+
+          if ! git diff --name-only "$BASE_REF"...HEAD | grep -qx 'NEWS.md'; then
+            echo "::error file=NEWS.md::NEWS.md was not modified in this PR. Add an entry for $PR_VERSION."
+            exit 1
+          fi
+
+          echo "OK: version bumped $BASE_VERSION -> $PR_VERSION and NEWS.md updated."
