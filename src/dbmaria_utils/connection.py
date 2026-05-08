@@ -1,0 +1,331 @@
+"""Connection pooling, transactions, and audit logging for dbmaria_project.
+
+Public API:
+    get_connection()  -- context manager yielding a pooled mariadb.Connection
+    transaction()     -- context manager yielding an audit-logging cursor
+    execute()         -- one-shot query helper returning list[dict]
+    init_pool()       -- explicit pool configuration
+    close_pool()      -- shutdown / test teardown
+
+Credentials are read from ``~/.my.cnf`` by default. The section name and any
+individual fields can be overridden via ``init_pool(...)`` keyword arguments.
+The database name additionally honors the ``LABDB_DATABASE`` env variable
+(env var loses to an explicit ``init_pool(database=...)`` override).
+
+Write statements (INSERT/UPDATE/DELETE/REPLACE) issued via ``execute()`` or via
+the cursor yielded by ``transaction()`` are appended to an audit log at
+``~/.labdb/audit.log`` (override with ``LABDB_AUDIT_LOG``).
+"""
+
+from __future__ import annotations
+
+import configparser
+import getpass
+import logging
+import os
+import re
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Iterator
+
+import mariadb
+
+
+DEFAULT_POOL_SIZE = 10
+DEFAULT_CONFIG_PATH = "~/.my.cnf"
+DEFAULT_SECTION = "labdb"
+DEFAULT_DATABASE = "dbmaria_project"
+
+_pool: mariadb.ConnectionPool | None = None
+_pool_counter = 0  # appended to pool_name so re-inits do not collide
+
+_logger = logging.getLogger("dbmaria_utils.audit")
+_logger.setLevel(logging.INFO)
+_logger.propagate = False  # do not bubble to root logger
+_USER = getpass.getuser()
+
+_WRITE_RE = re.compile(r"^\s*(INSERT|UPDATE|DELETE|REPLACE)\b", re.IGNORECASE)
+
+
+# --------------------------------------------------------------------------- #
+# credentials
+# --------------------------------------------------------------------------- #
+
+def _load_credentials(config_path: Path, section: str) -> dict[str, Any]:
+    """Read credentials from an INI file. Validates required keys."""
+    if not config_path.exists():
+        raise FileNotFoundError(
+            f"Credentials file not found: {config_path}. "
+            f"Create it with a [{section}] section containing user/password."
+        )
+
+    cfg = configparser.ConfigParser()
+    cfg.read(config_path)
+
+    if section not in cfg:
+        raise RuntimeError(
+            f"Section [{section}] not found in {config_path}. "
+            f"Available sections: {cfg.sections() or '(none)'}"
+        )
+
+    sect = cfg[section]
+    for required in ("user", "password"):
+        if required not in sect:
+            raise RuntimeError(
+                f"Missing required key {required!r} in [{section}] of {config_path}"
+            )
+
+    return {
+        "host": sect.get("host", "localhost"),
+        "port": int(sect.get("port", "3306")),
+        "user": sect["user"],
+        "password": sect["password"],
+        "database": sect.get("database", DEFAULT_DATABASE),
+    }
+
+
+def _resolve_credentials(
+    config_path: str | Path | None,
+    section: str,
+    overrides: dict[str, Any],
+) -> dict[str, Any]:
+    """Merge file-based credentials with explicit overrides.
+
+    Resolution order (highest priority first):
+      1. Explicit overrides passed to init_pool()
+      2. LABDB_DATABASE env var (database field only)
+      3. Values from the INI file (if config_path is not None)
+      4. Hardcoded defaults
+    """
+    if config_path is None:
+        creds: dict[str, Any] = {
+            "host": "localhost",
+            "port": 3306,
+            "database": DEFAULT_DATABASE,
+        }
+    else:
+        creds = _load_credentials(Path(config_path).expanduser(), section)
+
+    # env-var override for database (loses to explicit init_pool override below)
+    env_db = os.environ.get("LABDB_DATABASE")
+    if env_db:
+        creds["database"] = env_db
+
+    # explicit overrides win over everything
+    for key, value in overrides.items():
+        if value is not None:
+            creds[key] = value
+
+    for required in ("user", "password"):
+        if not creds.get(required):
+            raise RuntimeError(
+                f"Cannot initialize pool: {required!r} is missing. "
+                f"Provide it via init_pool({required}=...) or in the config file."
+            )
+
+    return creds
+
+
+# --------------------------------------------------------------------------- #
+# audit logger
+# --------------------------------------------------------------------------- #
+
+def _setup_audit_logger() -> None:
+    """Configure the audit FileHandler. Idempotent within one pool lifecycle."""
+    if _logger.handlers:
+        return
+    log_path = Path(
+        os.environ.get("LABDB_AUDIT_LOG", str(Path.home() / ".labdb" / "audit.log"))
+    ).expanduser()
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    handler = logging.FileHandler(log_path, encoding="utf-8")
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s | %(user)s | %(message)s")
+    )
+    _logger.addHandler(handler)
+
+
+def _teardown_audit_logger() -> None:
+    """Close and detach all audit handlers. Used by close_pool()."""
+    for handler in list(_logger.handlers):
+        handler.close()
+        _logger.removeHandler(handler)
+
+
+def _log_if_write(query: str, params: Any, rowcount: int) -> None:
+    """Append an audit entry for INSERT/UPDATE/DELETE/REPLACE statements."""
+    if not _WRITE_RE.match(query):
+        return
+    snippet = query.strip().replace("\n", " ")
+    if len(snippet) > 200:
+        snippet = snippet[:200] + "..."
+    _logger.info(
+        "%s | params=%r | rows=%d",
+        snippet, params, rowcount,
+        extra={"user": _USER},
+    )
+
+
+# --------------------------------------------------------------------------- #
+# pool lifecycle
+# --------------------------------------------------------------------------- #
+
+def init_pool(
+    pool_size: int = DEFAULT_POOL_SIZE,
+    *,
+    config_path: str | Path | None = DEFAULT_CONFIG_PATH,
+    section: str = DEFAULT_SECTION,
+    host: str | None = None,
+    port: int | None = None,
+    user: str | None = None,
+    password: str | None = None,
+    database: str | None = None,
+) -> None:
+    """Create the connection pool.
+
+    Raises RuntimeError if the pool is already initialized; call close_pool()
+    first to reconfigure. Pass config_path=None to skip the INI file entirely
+    and rely solely on the keyword overrides (useful for CI / tests).
+    """
+    global _pool, _pool_counter
+    if _pool is not None:
+        raise RuntimeError(
+            "pool already initialized; call close_pool() before re-initializing"
+        )
+
+    creds = _resolve_credentials(
+        config_path,
+        section,
+        {
+            "host": host,
+            "port": port,
+            "user": user,
+            "password": password,
+            "database": database,
+        },
+    )
+
+    _pool_counter += 1
+    pool_name = f"dbmaria_utils_{os.getpid()}_{_pool_counter}"
+    _pool = mariadb.ConnectionPool(
+        pool_name=pool_name,
+        pool_size=pool_size,
+        **creds,
+    )
+    _setup_audit_logger()
+
+
+def close_pool() -> None:
+    """Close the pool and release the audit log handler."""
+    global _pool
+    if _pool is not None:
+        try:
+            _pool.close()
+        except Exception:
+            pass
+        _pool = None
+    _teardown_audit_logger()
+
+
+def _get_pool() -> mariadb.ConnectionPool:
+    """Return the pool, initializing it lazily with default settings."""
+    if _pool is None:
+        init_pool()
+    assert _pool is not None
+    return _pool
+
+
+# --------------------------------------------------------------------------- #
+# connection / transaction / execute
+# --------------------------------------------------------------------------- #
+
+@contextmanager
+def get_connection() -> Iterator[mariadb.Connection]:
+    """Yield a pooled connection. Commits on success, rolls back on exception."""
+    conn = _get_pool().get_connection()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        # close() returns the connection to the pool, it does not destroy it.
+        conn.close()
+
+
+class _LoggingCursor:
+    """Cursor wrapper that audits write statements.
+
+    Composition rather than inheritance keeps us decoupled from the driver's
+    internal cursor class hierarchy. Unknown attributes are forwarded to the
+    underlying cursor.
+    """
+
+    def __init__(self, cursor: Any) -> None:
+        self._cursor = cursor
+
+    def execute(self, query: str, params: Any = None) -> Any:
+        result = self._cursor.execute(query, params or ())
+        _log_if_write(query, params, self._cursor.rowcount)
+        return result
+
+    def executemany(self, query: str, params_seq: Any) -> Any:
+        result = self._cursor.executemany(query, params_seq)
+        try:
+            n = len(params_seq)
+        except TypeError:
+            n = -1
+        _log_if_write(query, f"<batch of {n} rows>", self._cursor.rowcount)
+        return result
+
+    def __iter__(self) -> Iterator[Any]:
+        return iter(self._cursor)
+
+    def __enter__(self) -> "_LoggingCursor":
+        return self
+
+    def __exit__(self, *exc: Any) -> None:
+        self._cursor.close()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._cursor, name)
+
+
+@contextmanager
+def transaction() -> Iterator[_LoggingCursor]:
+    """Yield an audit-logging cursor. All statements share one transaction.
+
+    Commit and rollback are inherited from get_connection(): if the with-block
+    exits normally everything commits; if any statement raises, everything
+    rolls back atomically.
+    """
+    with get_connection() as conn:
+        cursor = _LoggingCursor(conn.cursor())
+        try:
+            yield cursor
+        finally:
+            cursor.close()
+
+
+def execute(query: str, params: Any = None) -> list[dict[str, Any]]:
+    """Run one query and return rows as a list of dicts.
+
+    SELECT statements return one dict per row (column name -> value).
+    INSERT/UPDATE/DELETE/REPLACE statements return [] and are audit-logged.
+
+    Each call uses its own pooled connection and its own transaction; for
+    multi-statement atomicity use transaction() instead.
+    """
+    with get_connection() as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute(query, params or ())
+            _log_if_write(query, params, cur.rowcount)
+            if cur.description is None:
+                return []
+            columns = [desc[0] for desc in cur.description]
+            return [dict(zip(columns, row)) for row in cur.fetchall()]
+        finally:
+            cur.close()
