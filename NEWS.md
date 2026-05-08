@@ -10,7 +10,7 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-05-08
+## [0.1.1] - 2026-05-08
 
 ### Added
 - Initial schema in `schema/001_initial.sql`: project → subject → visit →
