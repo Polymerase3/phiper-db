@@ -116,12 +116,16 @@ def _resolve_credentials(
         if value is not None:
             creds[key] = value
 
-    for required in ("user", "password"):
-        if not creds.get(required):
-            raise RuntimeError(
-                f"Cannot initialize pool: {required!r} is missing. "
-                f"Provide it via init_pool({required}=...) or in the config file."
-            )
+    if not creds.get("user"):
+        raise RuntimeError(
+            "Cannot initialize pool: 'user' is missing. "
+            "Provide it via init_pool(user=...) or in the config file."
+        )
+    if "password" not in creds or creds["password"] is None:
+        raise RuntimeError(
+            "Cannot initialize pool: 'password' is missing. "
+            "Provide it via init_pool(password=...) or in the config file."
+        )
 
     return creds
 
