@@ -62,7 +62,68 @@ _logger.setLevel(logging.INFO)
 _logger.propagate = False  # do not bubble to root logger
 _USER = getpass.getuser()
 
-_WRITE_RE = re.compile(r"^\s*(INSERT|UPDATE|DELETE|REPLACE)\b", re.IGNORECASE)
+_WRITE_KEYWORDS = ("INSERT", "UPDATE", "DELETE", "REPLACE")
+_LEADING_NOISE_RE = re.compile(
+    r"\A(?:\s+|--[^\n]*\n?|/\*.*?\*/)+",
+    re.DOTALL,
+)
+_KEYWORD_RE = re.compile(r"\b([A-Za-z_]+)\b")
+
+
+def _is_write_query(query: str) -> bool:
+    """Return True if the first DML keyword of *query* is a write.
+
+    Strips leading whitespace and SQL comments, and skips an optional CTE
+    (``WITH ... AS (...)``) prefix before inspecting the keyword. Paren
+    depth is tracked so commas/keywords inside the CTE body don't confuse
+    the scan.
+    """
+    s = _LEADING_NOISE_RE.sub("", query)
+    if s[:4].upper() == "WITH" and (len(s) == 4 or not s[4].isalnum() and s[4] != "_"):
+        depth = 0
+        i = 4
+        n = len(s)
+        while i < n:
+            c = s[i]
+            if c == "(":
+                depth += 1
+                i += 1
+            elif c == ")":
+                depth -= 1
+                i += 1
+            elif c == "-" and i + 1 < n and s[i + 1] == "-":
+                nl = s.find("\n", i)
+                i = n if nl == -1 else nl + 1
+            elif c == "/" and i + 1 < n and s[i + 1] == "*":
+                end = s.find("*/", i + 2)
+                i = n if end == -1 else end + 2
+            elif c in ("'", '"', "`"):
+                j = i + 1
+                while j < n:
+                    if s[j] == "\\" and j + 1 < n:
+                        j += 2
+                        continue
+                    if s[j] == c:
+                        j += 1
+                        break
+                    j += 1
+                i = j
+            elif depth == 0 and (c.isalpha() or c == "_"):
+                m = _KEYWORD_RE.match(s, i)
+                if m:
+                    kw = m.group(1).upper()
+                    if kw in _WRITE_KEYWORDS:
+                        return True
+                    if kw == "SELECT":
+                        return False
+                    i = m.end()
+                else:
+                    i += 1
+            else:
+                i += 1
+        return False
+    m = _KEYWORD_RE.match(s)
+    return bool(m) and m.group(1).upper() in _WRITE_KEYWORDS
 
 
 # --------------------------------------------------------------------------- #
@@ -285,7 +346,7 @@ def _teardown_audit_logger() -> None:
 
 def _log_if_write(query: str, params: Any, rowcount: int) -> None:
     """Append an audit entry for INSERT/UPDATE/DELETE/REPLACE statements."""
-    if not _WRITE_RE.match(query):
+    if not _is_write_query(query):
         return
     snippet = query.strip().replace("\n", " ")
     if len(snippet) > 200:
