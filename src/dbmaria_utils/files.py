@@ -101,10 +101,18 @@ def _validate_extension(path: str, file_type: str) -> None:
 
 
 def _is_under(path: str, root: str) -> bool:
-    """True iff *path* lives inside *root*. Uses commonpath, so a sibling
-    with the same prefix (`/lisc/archive_old`) does NOT match `/lisc/archive`."""
+    """True iff *path* lives inside *root* AFTER resolving symlinks.
+
+    Uses ``realpath`` on both sides so a symlink under the tier root that
+    points outside it (e.g. ``/lisc/archive/link.bam`` -> ``/etc/passwd``)
+    is rejected. ``commonpath`` is used instead of ``startswith`` so a
+    sibling with the same string prefix (``/lisc/archive_old``) is also
+    rejected.
+    """
     try:
-        return os.path.commonpath([os.path.abspath(path), os.path.abspath(root)]) == os.path.abspath(root)
+        resolved_root = os.path.realpath(root)
+        resolved_path = os.path.realpath(path)
+        return os.path.commonpath([resolved_path, resolved_root]) == resolved_root
     except ValueError:
         # commonpath raises ValueError on mixed drive letters (Windows) etc.
         return False
