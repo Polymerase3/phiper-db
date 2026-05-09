@@ -17,6 +17,8 @@ import mariadb
 import pytest
 
 from dbmaria_utils import files, projects, samples, subjects, transaction, visits
+
+from tests._helpers import wipe_all
 from dbmaria_utils.files import (
     _compute_md5,
     _expected_tier,
@@ -201,14 +203,14 @@ def roots(monkeypatch, tmp_path):
 def parent_ids(_init_pool):
     """One project / subject / visit / sample for sample_files to attach to."""
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
         pid = projects.create(cur, "FPROJ")
         sid = subjects.create(cur, pid, "S1", "F")
         vid = visits.create(cur, sid, "control", 30, timepoint="baseline")
         smp = samples.create(cur, vid, "SMP1", "sample", "SQR1", "SQRP1", "libA")
     yield smp
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
 
 
 def _make_file(p, content: bytes = b"hello") -> str:

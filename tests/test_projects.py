@@ -7,6 +7,8 @@ import pytest
 
 from dbmaria_utils import projects, transaction
 
+from tests._helpers import wipe_all
+
 
 @pytest.fixture
 def clean_projects(_init_pool):
@@ -17,10 +19,10 @@ def clean_projects(_init_pool):
     bookkeeping on each child table.
     """
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
     yield
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
 
 
 # --------------------------------------------------------------------------- #

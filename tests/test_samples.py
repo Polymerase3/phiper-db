@@ -7,19 +7,21 @@ import pytest
 
 from dbmaria_utils import projects, samples, subjects, transaction, visits
 
+from tests._helpers import wipe_all
+
 
 @pytest.fixture
 def two_visits(_init_pool):
     """Two visits under one subject. Cleanup wipes everything via cascade."""
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
         pid = projects.create(cur, "SPROJ")
         sid = subjects.create(cur, pid, "S1", "F")
         v1 = visits.create(cur, sid, "control", 30, timepoint="baseline")
         v2 = visits.create(cur, sid, "control", 31, timepoint="m3")
     yield v1, v2
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
 
 
 # --------------------------------------------------------------------------- #

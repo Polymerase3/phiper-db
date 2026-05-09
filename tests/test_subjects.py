@@ -7,6 +7,8 @@ import pytest
 
 from dbmaria_utils import projects, subjects, transaction
 
+from tests._helpers import wipe_all
+
 
 @pytest.fixture
 def two_projects(_init_pool):
@@ -16,12 +18,12 @@ def two_projects(_init_pool):
     each test starts from a clean slate.
     """
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
         a = projects.create(cur, "PROJ_A")
         b = projects.create(cur, "PROJ_B")
     yield a, b
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
 
 
 # --------------------------------------------------------------------------- #

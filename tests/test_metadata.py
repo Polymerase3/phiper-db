@@ -18,6 +18,8 @@ import pytest
 from dbmaria_utils import metadata, projects, samples, subjects, transaction, visits
 from dbmaria_utils.metadata import _eav_split, _row_to_value
 
+from tests._helpers import wipe_all
+
 
 # =========================================================================== #
 # Unit tier — pure helpers, no DB required
@@ -118,14 +120,14 @@ def parent_ids(_init_pool):
     cascade.
     """
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
         pid = projects.create(cur, "MPROJ")
         sid = subjects.create(cur, pid, "S1", "F")
         vid = visits.create(cur, sid, "control", 30, timepoint="baseline")
         smp = samples.create(cur, vid, "SMP1", "sample", "SQR1", "SQRP1", "libA")
     yield vid, smp
     with transaction() as cur:
-        cur.execute("DELETE FROM projects")
+        wipe_all(cur)
 
 
 # --------------------------------------------------------------------------- #
