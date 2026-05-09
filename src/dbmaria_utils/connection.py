@@ -435,11 +435,18 @@ def get_connection() -> Iterator[mariadb.Connection]:
         yield conn
         conn.commit()
     except Exception:
-        conn.rollback()
+        try:
+            conn.rollback()
+        except Exception:
+            # Don't mask the original exception with a rollback failure.
+            logging.getLogger(__name__).exception("rollback failed")
         raise
     finally:
         # close() returns the connection to the pool, it does not destroy it.
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            logging.getLogger(__name__).exception("connection close failed")
 
 
 class _LoggingCursor:
