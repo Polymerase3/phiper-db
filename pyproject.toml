@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phiper-db"
-version = "0.1.1"
+version = "0.2.0"
 description = "Schema, migrations, and Python tooling for the lab's MariaDB metadata database."
 requires-python = ">=3.10"
 authors = [
@@ -19,6 +19,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "pytest>=7.4",
+    "pytest-cov>=4.1",
 ]
 
 [tool.setuptools.packages.find]
@@ -27,3 +28,16 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src/dbmaria_utils"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

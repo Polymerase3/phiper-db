@@ -2,6 +2,8 @@
 
 [![Project Status: WIP – Initial development is in progress.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![CI](https://github.com/Polymerase3/phiper-db/actions/workflows/ci.yml/badge.svg)](https://github.com/Polymerase3/phiper-db/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Polymerase3/phiper-db/branch/main/graph/badge.svg)](https://codecov.io/gh/Polymerase3/phiper-db)
+[![version](https://img.shields.io/badge/version-0.2.0-blue)](./NEWS.md)
 
 Schema, migrations, and Python tooling for `dbmaria_project`, the lab's MariaDB
 metadata database (MariaDB ≥ 10, InnoDB, Galera). The DB stores metadata and
