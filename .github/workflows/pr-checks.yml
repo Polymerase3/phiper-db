@@ -18,9 +18,9 @@ jobs:
           set -euo pipefail
           BASE_REF="origin/${{ github.base_ref }}"
 
-          extract_version() { grep -E '^version = ' "$1" | head -1 | sed -E 's/version = "(.*)"/\1/'; }
+          extract_version() { grep -E '^version = ' "$1" | head -1 | sed -E 's/version = "(.*)"/\1/' || true; }
 
-          BASE_VERSION=$(git show "$BASE_REF":pyproject.toml | grep -E '^version = ' | head -1 | sed -E 's/version = "(.*)"/\1/')
+          BASE_VERSION=$(git show "$BASE_REF":pyproject.toml | { grep -E '^version = ' | head -1 | sed -E 's/version = "(.*)"/\1/' || true; })
           PR_VERSION=$(extract_version pyproject.toml)
 
           echo "Base version: $BASE_VERSION"
