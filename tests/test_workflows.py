@@ -15,10 +15,12 @@ import mariadb
 import pytest
 
 from dbmaria_utils import (
+    execute,
     files,
     metadata,
     projects,
     samples,
+    subjects,
     transaction,
     visits,
     workflows,
@@ -118,12 +120,16 @@ def test_register_subject_with_visit_atomic_rollback_on_bad_metadata(project):
             timepoint="t0", group_test="ctrl", age=30,
             visit_metadata={"bmi": None},  # ValueError from _eav_split
         )
-    with transaction() as cur:
-        cur.execute(
-            "SELECT COUNT(*) FROM subjects WHERE project_id = ? AND subject_code = ?",
-            (project, "ROLLBACK_S"),
-        )
-        assert cur.fetchone()[0] == 0
+    # Verify via execute() (one-shot connection) — mirrors the working
+    # pattern in test_transaction_rolls_back_atomically. A nested
+    # `with transaction()` for the readback can latch onto a snapshot
+    # taken before the rollback fully propagated.
+    rows = execute(
+        "SELECT COUNT(*) AS n FROM subjects "
+        "WHERE project_id = ? AND subject_code = ?",
+        (project, "ROLLBACK_S"),
+    )
+    assert rows[0]["n"] == 0
 
 
 def test_register_subject_with_visit_uses_provided_cursor(project):
@@ -142,12 +148,12 @@ def test_register_subject_with_visit_uses_provided_cursor(project):
             )
             raise Boom()
 
-    with transaction() as cur:
-        cur.execute(
-            "SELECT COUNT(*) FROM subjects WHERE project_id = ? AND subject_code = ?",
-            (project, "OUTER_ROLLBACK"),
-        )
-        assert cur.fetchone()[0] == 0
+    rows = execute(
+        "SELECT COUNT(*) AS n FROM subjects "
+        "WHERE project_id = ? AND subject_code = ?",
+        (project, "OUTER_ROLLBACK"),
+    )
+    assert rows[0]["n"] == 0
 
 
 # --------------------------------------------------------------------------- #
