@@ -3,97 +3,155 @@
 [![Project Status: WIP – Initial development is in progress.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![CI](https://github.com/Polymerase3/phiper-db/actions/workflows/ci.yml/badge.svg)](https://github.com/Polymerase3/phiper-db/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Polymerase3/phiper-db/branch/main/graph/badge.svg)](https://codecov.io/gh/Polymerase3/phiper-db)
-[![version](https://img.shields.io/badge/version-0.4.0-blue)](./NEWS.md)
+[![version](https://img.shields.io/badge/version-0.4.1-blue)](./NEWS.md)
 [![docs](https://img.shields.io/badge/docs-mkdocs--material-blue)](https://polymerase3.github.io/phiper-db/)
 
-📖 **Full documentation:** <https://polymerase3.github.io/phiper-db/>
+**📖 Documentation:** <https://polymerase3.github.io/phiper-db/>
 
-Schema, migrations, and Python tooling for `dbmaria_project`, the lab's MariaDB
-metadata database (MariaDB ≥ 10, InnoDB, Galera). The DB stores metadata and
-file pointers; bulk data lives on disk.
+---
 
-## Hierarchy: project → subject → visit → sample
+## What is this?
 
-- **project** — independent study or dataset.
-- **subject** — one person/donor within a project. Stable attributes only
-  (sex, origin). `subject_code` is unique per project.
-- **visit** — one timepoint / collection event for a subject. Time-varying
-  clinical metadata (age, group, timepoint) goes here.
-- **sample** — one physical sample / library / Ig-class measurement attached
-  to a visit. `sample_name` is globally unique.
+`phiper-db` is the lab's MariaDB metadata database and the Python
+package that talks to it.
 
-Flexible typed key/value metadata can be attached to visits (`visit_metadata`)
-and samples (`sample_metadata`). File paths are tracked in `sample_files`.
+The database stores **metadata and file pointers** — who the subject
+was, when the visit happened, which sample came out of it, and where
+the resulting fastq / bam / counts files live on disk. The bulk data
+itself stays on `/lisc/archive` and `/lisc/work`; the database just
+knows how to find it.
 
-## Naming conventions
+Everything is organised hierarchically:
 
-- Tables: plural snake_case (`projects`, `samples`, `sample_files`).
-- Primary keys: `<table_singular>_id` (e.g. `subject_id`).
-- Foreign keys reuse the parent PK name.
-- Migrations: `schema/NNN_description.sql`, numbered and append-only.
-- Stored file paths must be absolute (enforced by `CHECK`).
-
-## Repo layout
-
-- `schema/` — numbered SQL migrations
-- `users/` — role and privilege definitions (`users_with_passwords.sql` is gitignored)
-- `src/dbmaria_utils/` — Python wrapper package
-- `scripts/` — maintenance (sweep, backup)
-- `seed/` — fake data for development and CI
-- `tests/`, `docs/`, `notebooks/`
-
-## Quick start
-
-```bash
-pip install -e .
+```
+project → subject → visit → sample → sample_files
 ```
 
-Credentials go in `~/.my.cnf`. To run tests, see [`docs/testing.md`](docs/testing.md).
+Flexible typed key/value metadata can be attached to visits and
+samples (e.g. `bmi=22.7`, `smoker=False`, `group="control"`).
 
-## Connecting through the LiSC SSH jump host
+The Python package gives you:
 
-The Galera cluster is on the LiSC internal network and is only reachable from
-hosts inside LiSC. From outside, connect through the project VM
-(`ccr-lab.lisc.univie.ac.at`) — `init_pool()` will open an SSH tunnel for you
-when an SSH host is configured.
+- A connection pool with optional SSH tunneling through the LiSC
+  jump host.
+- Per-table CRUD helpers (`projects`, `subjects`, `visits`,
+  `samples`, `files`, `metadata`).
+- Composite read-only queries that join the hierarchy and pivot the
+  metadata into tidy tables.
+- High-level workflows that register a subject + visit + sample +
+  files in one atomic transaction.
+- An importer + CLI that loads a whole project folder
+  (`project.yaml`, `subjects.csv`, `visits.csv`, `samples.csv`,
+  `files/manifest.csv`) into the database in one go.
+- An exporter that downloads a project snapshot (metadata table +
+  files) back to a local folder.
 
-Add a `[labdb-ssh]` section alongside `[labdb]` in `~/.my.cnf`:
+---
+
+## Install
+
+Step-by-step. Copy-paste each block in order.
+
+### 1. System dependencies
+
+The Python `mariadb` driver builds against MariaDB client headers.
+
+```bash
+# Debian / Ubuntu
+sudo apt-get update
+sudo apt-get install -y git python3-venv libmariadb-dev
+```
+
+On macOS use `brew install mariadb-connector-c`; on Windows install
+the [MariaDB Connector/C](https://mariadb.com/downloads/connectors/connectors-data-access/c-connector/).
+
+### 2. Clone the repository
+
+```bash
+git clone https://github.com/Polymerase3/phiper-db.git
+cd phiper-db
+```
+
+### 3. Create a virtual environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+```
+
+### 4. Install the package
+
+```bash
+pip install --upgrade pip
+pip install -e ".[analysis]"
+```
+
+The `analysis` extra pulls in `pandas`, `openpyxl`, and `paramiko`,
+which you'll need for the query / fetch helpers. Skip it
+(`pip install -e .`) if you only need the low-level CRUD layer.
+
+### 5. Smoke test
+
+```bash
+python -c "import dbmaria_utils; print(dbmaria_utils.__name__, 'OK')"
+```
+
+If that prints `dbmaria_utils OK` you're done.
+
+---
+
+## Configure your credentials
+
+The library reads connection settings from `~/.my.cnf`. Create the
+file (it's the same INI used by the `mariadb` CLI) with two sections:
 
 ```ini
 [labdb]
-host=<galera-internal-hostname>   # the Galera endpoint as resolvable from ccr-lab
+host=<galera-internal-hostname>
 port=3306
-user=<db-user>
-password=<db-password>
+user=<your-db-user>
+password=<your-db-password>
 database=dbmaria_project
 
 [labdb-ssh]
 ssh_host=ccr-lab.lisc.univie.ac.at
-ssh_user=<lisc-username>
+ssh_user=<your-lisc-username>
 ssh_pkey=~/.ssh/id_ed25519        # public-key auth (preferred)
-# ssh_password=<lisc-password>    # alternative if you don't have a key uploaded
+# ssh_password=<lisc-password>    # alternative if you don't use keys
 ```
 
-Auth: `ssh_pkey` is tried first; otherwise paramiko falls back to your
-ssh-agent / default `~/.ssh/id_*` keys, then to `ssh_password` if set. Any
-field can also be supplied via `LABDB_SSH_*` env vars or as a kwarg to
-`init_pool()`. When `ssh_host` is unset (e.g. when running on `ccr-lab`
-itself), the library connects directly to the configured DB host.
+- The `[labdb]` section is your database login. Ask an admin for
+  values to fill in.
+- The `[labdb-ssh]` section is only needed when you're connecting
+  from **outside** LiSC — the library opens an SSH tunnel through
+  `ccr-lab` automatically. On a machine that already sits inside
+  LiSC, leave this section out and the library connects directly.
 
-## Access
+Protect the file: `chmod 600 ~/.my.cnf`.
 
-Three role tiers, all restricted to hosts in `lisc.%`:
+For the full credential resolution order (kwargs > env vars > INI),
+see the [Install page in the docs](https://polymerase3.github.io/phiper-db/install/).
 
-- **Admin** (full privileges): Mateusz Kołek, Gabriel Innocenti
-- **Read-write** (`SELECT/INSERT/UPDATE/DELETE`): Lovro Trgovec-Greif, Melanie Prinzensteiner
-- **Read-only** (`SELECT`): everyone else listed in `users/users.sql`
+---
 
-To request an account, email an admin (below) with your desired role. The admin
-adds you to `users/users.sql`, sets a password in the gitignored
-`users_with_passwords.sql`, and applies it.
+## Where to go next
+
+- **[Quickstart](https://polymerase3.github.io/phiper-db/quickstart/)** —
+  end-to-end Python example.
+- **[Schema](https://polymerase3.github.io/phiper-db/schema/)** —
+  the table layout and naming conventions.
+- **[API reference](https://polymerase3.github.io/phiper-db/reference/)** —
+  every public function.
+- **[CLI](https://polymerase3.github.io/phiper-db/cli/)** —
+  bulk-import a project folder with `scripts/import_project.py`.
+
+---
 
 ## Contact
 
-- Schema, DB admin, access: **Mateusz Franciszek Kołek** — <mateusz.kolek@meduniwien.ac.at>
-- Co-maintainer: Gabriel Innocenti
-- Bugs / feature requests: GitHub issues
+- Schema, DB admin, access:
+  **Mateusz Franciszek Kołek** — <mateusz.kolek@meduniwien.ac.at>
+- Co-maintainer:
+  **Gabriel Innocenti** — <gabriel.innocenti@meduniwien.ac.at>
+- Bugs / feature requests:
+  [GitHub issues](https://github.com/Polymerase3/phiper-db/issues)

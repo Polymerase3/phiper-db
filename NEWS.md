@@ -10,6 +10,17 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-05-11
+
+### Changed
+- `README.md` rewritten as a plain, copy-pasteable onboarding page:
+  short summary of the repo's purpose, step-by-step install (system
+  deps → `git clone` → venv → `pip install -e ".[analysis]"` → smoke
+  test), minimal `~/.my.cnf` example, links to the docs site for
+  everything else. The access-tier section is dropped (lives on the
+  docs site / is managed off-repo); the Contact section now lists
+  Gabriel Innocenti alongside Mateusz Kołek.
+
 ## [0.4.1] - 2026-05-11
 
 ### Changed
