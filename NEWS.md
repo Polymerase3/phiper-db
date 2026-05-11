@@ -12,6 +12,16 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [0.2.2] - 2026-05-11
 
+### Fixed
+- `get_connection()` now forces server-side `SET autocommit=0` on every
+  pool checkout instead of relying on the Python-side `conn.autocommit`
+  setter. The setter elides the `SET` command when its cached flag
+  already matches, so after a pool reset the server could be left in
+  autocommit=1 while Python thought it was 0. Inserts then auto-committed
+  and `rollback()` was a silent no-op. Triggered intermittently for
+  later-session tests; surfaced by a regression test against the
+  `subjects` table.
+
 ### Added
 - `workflows` module bundling atomic, idempotent high-level operations
   on top of the per-table CRUD helpers:

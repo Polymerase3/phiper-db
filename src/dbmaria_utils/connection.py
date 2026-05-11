@@ -484,14 +484,35 @@ def _get_pool() -> mariadb.ConnectionPool:
 # connection / transaction / execute
 # --------------------------------------------------------------------------- #
 
+def _force_server_autocommit_off(conn: mariadb.Connection) -> None:
+    """Send `SET autocommit=0` directly, bypassing the driver's setter.
+
+    Pool checkout cycles can drift the server-side autocommit state away
+    from what the Python-side attribute reflects. Issuing the SQL command
+    unconditionally guarantees the next statement runs inside an
+    explicit transaction we can roll back.
+    """
+    cur = conn.cursor()
+    try:
+        cur.execute("SET autocommit=0")
+    finally:
+        cur.close()
+
+
 @contextmanager
 def get_connection() -> Iterator[mariadb.Connection]:
     """Yield a pooled connection. Commits on success, rolls back on exception."""
     conn = _get_pool().get_connection()
-    # Pool reset between uses can revert autocommit to the server default
-    # (True on MariaDB), which would silently break our rollback path.
-    # Force it explicitly on every checkout.
+    # Pool reset between uses can revert server-side autocommit to the
+    # server default (1 on MariaDB), which would silently break our rollback
+    # path. The Python-side attribute is unreliable here: when the pool
+    # config already declared autocommit=False, the driver's setter sees a
+    # matching python flag and skips sending `SET autocommit=0`, leaving
+    # the server in whatever state the previous checkout left it in.
+    # Force server-side OFF explicitly with a SET so each transaction
+    # starts from a known state.
     conn.autocommit = False
+    _force_server_autocommit_off(conn)
     try:
         yield conn
         conn.commit()

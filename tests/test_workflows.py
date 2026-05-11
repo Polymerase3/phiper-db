@@ -111,34 +111,24 @@ def test_register_subject_with_visit_idempotent_on_rerun(project):
     assert float(meta["bmi"]) == 22.5  # metadata.set_visit upserts
 
 
-def test_diagnostic_crud_rollback_on_subjects(project):
-    """Same shape as test_diagnostic_raw_rollback_on_subjects but routed
-    through subjects.create() (the CRUD wrapper)."""
-    with pytest.raises(RuntimeError, match="diag boom 2"):
-        with transaction() as cur:
-            subjects.create(cur, project, "DIAG_CRUD", "F")
-            raise RuntimeError("diag boom 2")
-    rows = execute(
-        "SELECT COUNT(*) AS n FROM subjects "
-        "WHERE project_id = ? AND subject_code = ?",
-        (project, "DIAG_CRUD"),
-    )
-    assert rows[0]["n"] == 0
+def test_rollback_works_for_late_session_subjects_insert(project):
+    """Regression test for the autocommit-after-pool-reset bug.
 
-
-def test_diagnostic_raw_rollback_on_subjects(project):
-    """Minimal repro: does rollback() actually undo a raw INSERT into the
-    subjects table? Mirrors test_transaction_rolls_back_atomically but
-    targets `subjects` (FK + AUTO_INCREMENT) instead of `_test_kv`.
+    Earlier versions of `get_connection()` set `conn.autocommit = False`
+    via the Python attribute, which the driver elides when its cached
+    flag already matches — leaving server-side autocommit stuck at 1
+    after a pool reset. Inserts then auto-committed and rollback was a
+    no-op. Verified by issuing a raw INSERT into a table with FK +
+    AUTO_INCREMENT (subjects), raising, and checking the row is gone.
     """
-    with pytest.raises(RuntimeError, match="diag boom"):
+    with pytest.raises(RuntimeError, match="rollback regression"):
         with transaction() as cur:
             cur.execute(
                 "INSERT INTO subjects (project_id, subject_code, sex) "
                 "VALUES (?, ?, ?)",
                 (project, "DIAG_S", "F"),
             )
-            raise RuntimeError("diag boom")
+            raise RuntimeError("rollback regression")
     rows = execute(
         "SELECT COUNT(*) AS n FROM subjects "
         "WHERE project_id = ? AND subject_code = ?",
