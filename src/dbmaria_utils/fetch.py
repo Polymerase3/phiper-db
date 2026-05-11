@@ -182,11 +182,23 @@ def export_metadata_table(
     output_dir: Path | str,
     formats: tuple[str, ...] = ("csv",),
 ) -> dict[str, Path]:
-    """Write the project tidy table to *output_dir* in the requested formats.
+    """Write the project tidy table to disk in the requested formats.
 
-    *formats* is an iterable of ``'csv'`` and/or ``'xlsx'``. Returns a
-    dict mapping each requested format to the path of the file written.
-    Raises ``ImportError`` for ``'xlsx'`` if :mod:`openpyxl` is missing.
+    Args:
+        cur: Optional cursor from `transaction()`. When ``None`` this
+            helper opens its own transaction.
+        project_id: Project to export.
+        output_dir: Destination directory. Created if missing.
+        formats: Iterable of ``'csv'`` and/or ``'xlsx'``.
+
+    Returns:
+        ``{fmt: Path, ...}`` mapping each requested format to the file
+        written.
+
+    Raises:
+        ValueError: If ``formats`` contains an unknown format.
+        ImportError: If ``'xlsx'`` is requested but ``openpyxl`` is
+            missing, or if pandas is missing entirely.
     """
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -219,20 +231,41 @@ def download_files_for_project(
     ssh_section: str = DEFAULT_SSH_SECTION,
     **ssh_overrides: Any,
 ) -> dict[str, Any]:
-    """Copy every file registered for *project_id* into *output_dir*.
+    """Copy every file registered for a project into a local folder.
 
-    *file_types*: if given, only files whose ``file_type`` is in the list
-    are downloaded. ``None`` means download every type.
+    SSH credentials are resolved from ``config_path`` / ``ssh_section``
+    the same way
+    [`init_pool`][dbmaria_utils.connection.init_pool] does. When
+    ``ssh_host`` is unset the function falls back to local file copy
+    via ``shutil.copyfile`` (useful when running on LiSC itself).
+    Already-present destinations are skipped, so the call is resumable.
 
-    *layout*: ``'by_sample'`` (default) groups files under per-sample
-    subdirectories; ``'by_type'`` groups by file_type; ``'flat'`` writes
-    every file at the top level (be aware that ``sample_files.file_path``
-    is globally UNIQUE but basenames are not).
+    Args:
+        cur: Optional cursor from `transaction()`. When ``None`` this
+            helper opens its own transaction.
+        project_id: Project to download.
+        output_dir: Destination directory. Created if missing.
+        file_types: Only download files whose ``file_type`` is in the
+            list. ``None`` means every type.
+        layout: ``'by_sample'`` groups files under per-sample
+            subdirectories; ``'by_type'`` groups by file_type;
+            ``'flat'`` writes every file at the top level (note:
+            ``file_path`` is globally UNIQUE but basenames are not).
+        config_path: Path to the MariaDB-style config file. ``None``
+            disables config-file lookup.
+        ssh_section: Section name within ``config_path`` to read SSH
+            credentials from.
+        **ssh_overrides: Per-call SSH kwargs that win over the config
+            file and ``LABDB_SSH_*`` env vars.
 
-    SSH credentials are resolved from *config_path* / *ssh_section* the
-    same way :func:`init_pool` does. When ``ssh_host`` is unset the
-    function falls back to local file copy via :func:`shutil.copyfile`.
-    Returns a report dict: ``{downloaded, skipped, failed, output_dir}``.
+    Returns:
+        ``{"downloaded": [...], "skipped": [...], "failed": [...],
+        "output_dir": str}``. ``downloaded`` entries include ``size``;
+        ``failed`` entries include ``error``.
+
+    Raises:
+        ValueError: Unknown ``layout``.
+        ImportError: If SFTP is needed and ``paramiko`` is missing.
     """
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -299,9 +332,39 @@ def export_project(
 ) -> dict[str, Any]:
     """One-shot export: metadata table + files + README.
 
-    Combines :func:`export_metadata_table` and :func:`download_files_for_project`
-    and writes a small ``README.txt`` describing the project. Useful for
-    handing a self-contained snapshot to a collaborator.
+    Combines
+    [`export_metadata_table`][dbmaria_utils.fetch.export_metadata_table]
+    and
+    [`download_files_for_project`][dbmaria_utils.fetch.download_files_for_project]
+    and writes a small ``README.txt`` describing the project. Useful
+    for handing a self-contained snapshot to a collaborator.
+
+    Args:
+        cur: Optional cursor from `transaction()`. When ``None`` this
+            helper opens its own transaction.
+        project_id: Project to export.
+        output_dir: Destination directory. Created if missing.
+        file_types: Forwarded to
+            [`download_files_for_project`][dbmaria_utils.fetch.download_files_for_project].
+        layout: Forwarded to
+            [`download_files_for_project`][dbmaria_utils.fetch.download_files_for_project].
+        metadata_formats: Forwarded to
+            [`export_metadata_table`][dbmaria_utils.fetch.export_metadata_table].
+        include_files: When ``False``, skip file download entirely
+            (only metadata + README are produced).
+        config_path: See
+            [`download_files_for_project`][dbmaria_utils.fetch.download_files_for_project].
+        ssh_section: See
+            [`download_files_for_project`][dbmaria_utils.fetch.download_files_for_project].
+        **ssh_overrides: See
+            [`download_files_for_project`][dbmaria_utils.fetch.download_files_for_project].
+
+    Returns:
+        ``{"project", "summary", "metadata", "files", "readme",
+        "output_dir"}`` — the project row, the
+        [`project_summary`][dbmaria_utils.queries.project_summary]
+        dict, paths of the metadata files, the file-download report,
+        and the README path.
     """
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)

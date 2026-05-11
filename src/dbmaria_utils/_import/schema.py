@@ -47,11 +47,22 @@ META_PREFIX = "meta_"
 # --------------------------------------------------------------------------- #
 
 def coerce_metadata_value(raw: str) -> Any | None:
-    """Coerce a raw CSV cell to an int / float / bool / str.
+    """Coerce a raw CSV cell to an ``int`` / ``float`` / ``bool`` / ``str``.
 
-    Empty / whitespace-only cells return ``None``, meaning "no metadata
-    entry" — the caller should skip the row rather than insert NULL,
-    because :func:`metadata.set_*` rejects None.
+    Type inference order: bool (``'true'`` / ``'false'``) → int → float
+    → str. ``'1'`` / ``'0'`` are NOT treated as bools (they'd otherwise
+    parse as int and lose their boolean intent at write time).
+
+    Args:
+        raw: The raw cell value.
+
+    Returns:
+        The coerced value, or ``None`` for empty / whitespace-only
+        cells (meaning "no metadata entry" — the caller should skip
+        the row rather than insert NULL, because
+        [`metadata.set_visit`][dbmaria_utils.metadata.set_visit] /
+        [`metadata.set_sample`][dbmaria_utils.metadata.set_sample]
+        reject ``None``).
     """
     if raw is None:
         return None
@@ -76,7 +87,20 @@ def coerce_metadata_value(raw: str) -> Any | None:
 
 
 def coerce_int(raw: str, *, field: str) -> int:
-    """Parse an int, raising :class:`ValueError` with the field name on failure."""
+    """Parse an int with a labelled error on failure.
+
+    Args:
+        raw: The raw cell value.
+        field: Human-readable identifier (e.g. ``"visits.csv row 4.age"``)
+            embedded in the error message so the user can locate the
+            bad cell.
+
+    Returns:
+        The parsed integer.
+
+    Raises:
+        ValueError: If ``raw`` is not parseable as an int.
+    """
     try:
         return int(str(raw).strip())
     except (TypeError, ValueError) as exc:
@@ -86,14 +110,22 @@ def coerce_int(raw: str, *, field: str) -> int:
 def split_columns(
     header: list[str], required: tuple[str, ...], optional: tuple[str, ...],
 ) -> tuple[list[str], list[str]]:
-    """Return ``(non_meta_extra, meta_keys)`` given a CSV header.
+    """Split a CSV header into known, metadata, and extra columns.
 
-    *non_meta_extra* — columns not in required/optional and not prefixed
-    with ``meta_``. These are silently ignored by the loader but reported
-    to the user as warnings (so a typo like ``smaple_name`` doesn't
-    silently drop data).
+    Args:
+        header: List of column names from the CSV header row.
+        required: Column names that must be present.
+        optional: Column names allowed but not required.
 
-    *meta_keys* — the bare key names with ``meta_`` stripped.
+    Returns:
+        ``(non_meta_extra, meta_keys)``:
+
+        - ``non_meta_extra`` — columns not in required/optional and
+          not prefixed with ``meta_``. These are silently ignored by
+          the loader but reported to the user as warnings (so a typo
+          like ``smaple_name`` doesn't silently drop data).
+        - ``meta_keys`` — the bare metadata key names with the
+          ``meta_`` prefix stripped.
     """
     known = set(required) | set(optional)
     extra: list[str] = []
