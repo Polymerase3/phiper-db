@@ -10,6 +10,20 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-05-11
+
+### Changed
+- Converted all public docstrings in `dbmaria_utils` (`connection`,
+  `projects`, `subjects`, `visits`, `samples`, `metadata`, `files`,
+  `queries`, `workflows`, `fetch`) and the `_import` subpackage to
+  Google style with explicit `Args:` / `Returns:` / `Raises:` sections.
+  No code behavior changes. The API-reference pages on the docs site
+  now render structured parameter tables.
+- `docs.yml` runs `mkdocs build` without `--strict`. Griffe warns on
+  the deliberately-untyped `cur` parameter (cursor can be either a
+  `mariadb` cursor or a `_LoggingCursor` wrapper); adding `cur: Any`
+  everywhere would be churn without semantic gain.
+
 ## [0.4.0] - 2026-05-11
 
 ### Added

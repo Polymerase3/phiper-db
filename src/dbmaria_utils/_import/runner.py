@@ -331,16 +331,40 @@ def import_project_from_dir(
 ) -> ImportReport:
     """Validate and (unless *dry_run*) import the project under *root*.
 
-    Raises :class:`ProjectImportError` with the collected error list when
-    validation fails, or when the project already exists and *force* is
-    False. On success returns an :class:`ImportReport` with row counts
-    per table.
+    The runner performs validation in a read-only pass before any
+    writes happen, so a failed import never leaves the database in a
+    half-written state. With ``force=True`` a re-run on the same
+    folder re-uses existing rows via the
+    ``get_or_create`` / ``get_or_register`` / ``set_*`` semantics of
+    the CRUD layer; the report distinguishes ``inserted`` from
+    ``existing`` (or, for metadata, ``inserted`` vs ``updated`` vs
+    ``unchanged``).
 
-    Idempotency: with *force* a re-run on the same folder re-uses
-    existing rows via the ``get_or_create`` / ``get_or_register`` /
-    ``set_*`` semantics of the CRUD layer; the report distinguishes
-    ``inserted`` from ``existing`` (or, for metadata, ``inserted``
-    vs ``updated`` vs ``unchanged``).
+    Cross-project collisions on ``sample_name`` or ``file_path`` are
+    refused even with ``force=True`` — those UNIQUEs are global by
+    design.
+
+    Args:
+        root: Path to the project folder containing ``project.yaml``,
+            ``subjects.csv``, ``visits.csv``, ``samples.csv``, and
+            ``files/manifest.csv``.
+        dry_run: Validate only; skip the commit phase.
+        force: Allow re-import of a project that already exists.
+        compute_md5: Hash files whose manifest entry has no
+            ``checksum_md5``.
+        skip_disk_check: Skip the per-file ``os.path.exists`` check
+            (use when files live on a remote mount not visible from
+            this host).
+        log_dir: Directory to write the JSON report to. Defaults to
+            ``~/.labdb/imports/``.
+
+    Returns:
+        An `ImportReport` with row counts per table.
+
+    Raises:
+        ProjectImportError: With the collected error list when
+            validation fails, or when the project already exists and
+            ``force`` is ``False``.
     """
     start = time.monotonic()
     bundle = loader.load_project_dir(root)

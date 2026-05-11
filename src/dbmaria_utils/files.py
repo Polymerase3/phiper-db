@@ -242,18 +242,38 @@ def register(
     checksum_md5: str | None = None,
     storage_tier: str | None = None,
 ) -> int:
-    """Validate *file_path* on disk and insert a `sample_files` row.
+    """Validate a file on disk and insert a `sample_files` row.
 
-    Returns the new ``file_id``. Validation errors are raised *before* any
-    SQL runs:
+    Filesystem checks (path is absolute, regular file exists, extension
+    matches ``file_type``, path lives under the tier root via realpath)
+    run **before** any SQL is executed, so a failure leaves the
+    transaction untouched.
 
-    - ``ValueError`` for relative paths, unknown ``file_type``, mismatched
-      extension or tier, malformed ``checksum_md5``, or both
-      ``compute_md5`` and ``checksum_md5`` set.
-    - ``FileNotFoundError`` if the path does not exist.
-    - ``IsADirectoryError`` if the path is a directory.
-    - ``mariadb.IntegrityError`` from the driver for unknown
-      ``sample_id`` (FK) or duplicate ``file_path`` (UNIQUE).
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        sample_id: Parent sample. Must already exist.
+        file_path: Absolute path on disk.
+        file_type: One of the known types (`fastq_r1`, `fastq_r2`,
+            `fastq_single`, `bam`, `counts`, `beer_norm`, `zigp_norm`,
+            `edger_norm`).
+        compute_md5: If ``True``, hash the file. Mutually exclusive with
+            ``checksum_md5``.
+        checksum_md5: Caller-supplied 32-char lowercase-hex MD5.
+        storage_tier: Override the file-type-derived tier. Only
+            ``'scratch'`` and ``'external'`` are accepted as overrides;
+            flipping ``archive`` ↔ ``work`` is rejected.
+
+    Returns:
+        The newly inserted ``file_id``.
+
+    Raises:
+        ValueError: Relative path, unknown ``file_type``, mismatched
+            extension or tier, malformed ``checksum_md5``, or both
+            ``compute_md5`` and ``checksum_md5`` set.
+        FileNotFoundError: If the path does not exist.
+        IsADirectoryError: If the path is a directory.
+        mariadb.IntegrityError: Unknown ``sample_id`` (FK violation) or
+            duplicate ``file_path`` (global UNIQUE).
     """
     row = _inspect_file(
         file_path, file_type,
@@ -287,13 +307,32 @@ def get_or_register(
     checksum_md5: str | None = None,
     storage_tier: str | None = None,
 ) -> tuple[int, bool]:
-    """Return ``(file_id, registered)``. Idempotent on ``file_path``.
+    """Idempotently register a file. Returns ``(file_id, registered)``.
 
-    If a row with this ``file_path`` already exists, it is returned as-is —
-    the file is NOT re-stat'd and the other arguments are not used to
-    update the existing row. This means a stale path that was registered
-    in the past keeps returning its id even if the file has since been
-    deleted; call :func:`restat` if you need to refresh it.
+    If a row with this ``file_path`` already exists, it is returned
+    as-is — the file is NOT re-stat'd and the other arguments are not
+    used to update the existing row. This means a stale path that was
+    registered in the past keeps returning its id even if the file has
+    since been deleted; call
+    [`restat`][dbmaria_utils.files.restat] if you need to refresh it.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        sample_id: Parent sample (used only on insert).
+        file_path: Absolute path on disk. Globally unique.
+        file_type: See [`register`][dbmaria_utils.files.register].
+        compute_md5: Used only on insert.
+        checksum_md5: Used only on insert.
+        storage_tier: Used only on insert.
+
+    Returns:
+        ``(file_id, registered)`` where ``registered`` is ``True`` iff
+        this call inserted the row.
+
+    Raises:
+        mariadb.IntegrityError: If the race-recovery fetch also misses.
+        Plus everything [`register`][dbmaria_utils.files.register] raises
+        on insert.
     """
     existing = get_by_path(cur, file_path)
     if existing is not None:
@@ -314,14 +353,30 @@ def get_or_register(
 
 
 def get(cur, file_id: int) -> dict[str, Any] | None:
-    """Return the file row for *file_id*, or ``None`` if not found."""
+    """Return the file row for a given id.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        file_id: Primary key to look up.
+
+    Returns:
+        The row as ``dict[str, Any]``, or ``None`` if not found.
+    """
     cur.execute("SELECT * FROM sample_files WHERE file_id = ?", (file_id,))
     row = cur.fetchone()
     return _row_to_dict(cur, row) if row is not None else None
 
 
 def get_by_path(cur, file_path: str) -> dict[str, Any] | None:
-    """Return the file row for *file_path*, or ``None`` if not found."""
+    """Return the file row for a given path.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        file_path: Absolute path on disk.
+
+    Returns:
+        The row as ``dict[str, Any]``, or ``None`` if not found.
+    """
     cur.execute("SELECT * FROM sample_files WHERE file_path = ?", (file_path,))
     row = cur.fetchone()
     return _row_to_dict(cur, row) if row is not None else None
@@ -330,7 +385,19 @@ def get_by_path(cur, file_path: str) -> dict[str, Any] | None:
 def list_for_sample(
     cur, sample_id: int, *, order_by: str = "file_id"
 ) -> list[dict[str, Any]]:
-    """Return all sample_files rows for *sample_id*."""
+    """Return all ``sample_files`` rows for a sample.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        sample_id: Sample to list.
+        order_by: Column name to order by. Must be a column of ``sample_files``.
+
+    Returns:
+        All matching rows as ``list[dict[str, Any]]``.
+
+    Raises:
+        ValueError: If ``order_by`` is not a known column name.
+    """
     if order_by not in _ORDERABLE:
         raise ValueError(
             f"order_by must be one of {sorted(_ORDERABLE)}, got {order_by!r}"
@@ -345,7 +412,15 @@ def list_for_sample(
 
 
 def count_for_sample(cur, sample_id: int) -> int:
-    """Return the number of files registered for *sample_id*."""
+    """Return the number of files registered for a sample.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        sample_id: Sample to count.
+
+    Returns:
+        Number of ``sample_files`` rows.
+    """
     cur.execute(
         "SELECT COUNT(*) FROM sample_files WHERE sample_id = ?", (sample_id,)
     )
@@ -360,13 +435,33 @@ def update(
     checksum_md5: str | None = None,
     storage_tier: str | None = None,
 ) -> bool:
-    """Partial update: only kwargs with non-None values are written.
+    """Partial update of a file row.
 
-    ``file_path``, ``file_type``, ``sample_id``, and ``created_at`` are NOT
-    updatable — those describe a different file. Use :func:`restat` to
-    refresh size/checksum from disk after a file is rewritten in place.
+    Only kwargs with non-None values are written. ``file_path``,
+    ``file_type``, ``sample_id``, and ``created_at`` are NOT updatable
+    — those describe a different file. Use
+    [`restat`][dbmaria_utils.files.restat] to refresh size/checksum from
+    disk after a file is rewritten in place.
 
-    Returns True iff one row was actually updated.
+    Updating ``storage_tier`` enforces the same `file_type → tier`
+    invariant as [`register`][dbmaria_utils.files.register]: flipping
+    ``archive`` ↔ ``work`` is rejected; ``scratch`` / ``external``
+    overrides are allowed.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        file_id: Row to update.
+        file_size_bytes: New size (if not None).
+        checksum_md5: New 32-char lowercase-hex MD5 (if not None).
+        storage_tier: New tier (if not None).
+
+    Returns:
+        ``True`` iff exactly one row was updated.
+
+    Raises:
+        ValueError: Malformed ``checksum_md5``, unknown
+            ``storage_tier``, or a tier override that violates the
+            file-type invariant.
     """
     if checksum_md5 is not None:
         _validate_md5(checksum_md5)
@@ -404,8 +499,18 @@ def update(
 def restat(cur, file_id: int, *, compute_md5: bool = False) -> bool:
     """Re-read size (and optionally md5) from disk for an existing row.
 
-    Raises ``FileNotFoundError`` if the path no longer resolves; in that
-    case no SQL runs. Returns True iff the row's columns actually changed.
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        file_id: Row to refresh.
+        compute_md5: If ``True``, recompute the MD5. Otherwise the
+            existing checksum is kept.
+
+    Returns:
+        ``True`` iff the row's columns actually changed.
+
+    Raises:
+        FileNotFoundError: If the path no longer resolves. No SQL runs
+            in that case.
     """
     row = get(cur, file_id)
     if row is None:
@@ -421,10 +526,17 @@ def restat(cur, file_id: int, *, compute_md5: bool = False) -> bool:
 
 
 def delete(cur, file_id: int) -> bool:
-    """Delete a file row. Returns True iff a row was removed.
+    """Delete a file row.
 
-    NOTE: this only removes the database record. The file on disk is
-    untouched — clean it up separately.
+    Only removes the database record. The file on disk is untouched —
+    clean it up separately.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        file_id: Row to delete.
+
+    Returns:
+        ``True`` iff a row was removed.
     """
     cur.execute("DELETE FROM sample_files WHERE file_id = ?", (file_id,))
     return cur.rowcount > 0
@@ -436,9 +548,18 @@ def exists(
     *,
     path: str | None = None,
 ) -> bool:
-    """Return True if a file with the given id OR path exists.
+    """Return whether a file with the given id or path exists.
 
-    Exactly one of *file_id* / *path* must be provided.
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        file_id: Id to check (exclusive with ``path``).
+        path: Path to check (exclusive with ``file_id``).
+
+    Returns:
+        ``True`` if a matching row exists.
+
+    Raises:
+        ValueError: If both or neither of ``file_id`` / ``path`` is given.
     """
     if (file_id is None) == (path is None):
         raise ValueError("exists() requires exactly one of file_id or path")

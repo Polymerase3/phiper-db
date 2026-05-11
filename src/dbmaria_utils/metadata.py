@@ -55,13 +55,25 @@ _SAMPLE = _Target("sample_metadata", "sample_id")
 def _eav_split(value: Any) -> tuple[str, int | None, Any, bool | None, str | None]:
     """Split *value* into ``(value_type, v_int, v_numeric, v_bool, v_text)``.
 
-    ``bool`` is checked before ``int`` because ``isinstance(True, int)`` is
-    True in Python — flipping the order would silently misclassify booleans
-    as integers.
+    ``bool`` is checked before ``int`` because ``isinstance(True, int)``
+    is True in Python — flipping the order would silently misclassify
+    booleans as integers.
 
-    Raises ``ValueError`` for ``None`` (the schema CHECK forbids all-NULL
-    rows; failing here makes the error legible). Raises ``TypeError`` for
-    any other unsupported type.
+    Args:
+        value: A ``bool``, ``int``, ``float``, or ``str``.
+
+    Returns:
+        A 5-tuple ``(value_type, value_int, value_numeric, value_bool,
+        value_text)`` where exactly one of the four typed slots is
+        populated.
+
+    Raises:
+        ValueError: If ``value`` is ``None``. The schema `CHECK` forbids
+            all-NULL rows; failing here makes the error legible. Use
+            [`delete_visit`][dbmaria_utils.metadata.delete_visit] /
+            [`delete_sample`][dbmaria_utils.metadata.delete_sample] to
+            remove an entry.
+        TypeError: If ``value`` is not one of the supported types.
     """
     if value is None:
         raise ValueError(
@@ -80,9 +92,23 @@ def _eav_split(value: Any) -> tuple[str, int | None, Any, bool | None, str | Non
 
 
 def _row_to_value(row: dict[str, Any]) -> Any:
-    """Inverse of :func:`_eav_split`. Picks the populated column by
-    ``value_type`` and coerces ``value_bool`` back to a Python ``bool``
-    (the driver returns ``0``/``1`` because BOOLEAN is TINYINT(1))."""
+    """Decode an EAV row back to a native Python value.
+
+    Inverse of [`_eav_split`][dbmaria_utils.metadata._eav_split]. Picks
+    the populated column by ``value_type`` and coerces ``value_bool``
+    back to a Python ``bool`` (the driver returns ``0``/``1`` because
+    BOOLEAN is TINYINT(1)).
+
+    Args:
+        row: A dict with keys ``value_int``, ``value_numeric``,
+            ``value_bool``, ``value_text``, ``value_type``.
+
+    Returns:
+        The native Python value.
+
+    Raises:
+        ValueError: If ``value_type`` is not one of the four known types.
+    """
     vt = row["value_type"]
     if vt == "int":
         return row["value_int"]
@@ -166,28 +192,66 @@ def _delete(cur, target: _Target, parent_id: int, key: str) -> bool:
 # --------------------------------------------------------------------------- #
 
 def set_visit(cur, visit_id: int, key: str, value: Any) -> SetResult:
-    """Upsert ``(visit_id, key)`` with *value*. Idempotent.
+    """Upsert a visit_metadata entry. Idempotent.
 
-    Returns ``"inserted"`` on first write, ``"updated"`` when the value
-    changed, ``"unchanged"`` when the row already had the same value.
-    Raises ``ValueError`` for ``None`` values and ``TypeError`` for
-    unsupported types.
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        visit_id: Parent visit.
+        key: Metadata key name (unique per visit).
+        value: ``bool`` / ``int`` / ``float`` / ``str``. Float values
+            round-trip as ``decimal.Decimal`` because the column type is
+            ``DECIMAL(20,6)``.
+
+    Returns:
+        ``"inserted"`` on first write, ``"updated"`` when the value
+        changed, ``"unchanged"`` when the row already had the same
+        value.
+
+    Raises:
+        ValueError: If ``value`` is ``None``.
+        TypeError: If ``value`` is of an unsupported type.
     """
     return _set(cur, _VISIT, visit_id, key, value)
 
 
 def get_visit(cur, visit_id: int, key: str) -> Any:
-    """Return the native value for ``(visit_id, key)``, or ``None`` if not set."""
+    """Return the native value for ``(visit_id, key)``.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        visit_id: Parent visit.
+        key: Metadata key name.
+
+    Returns:
+        The decoded value, or ``None`` if the key is not set.
+    """
     return _get(cur, _VISIT, visit_id, key)
 
 
 def list_for_visit(cur, visit_id: int) -> dict[str, Any]:
-    """Return all metadata for *visit_id* as ``{key: value, ...}``."""
+    """Return all metadata for a visit as a key/value dict.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        visit_id: Parent visit.
+
+    Returns:
+        ``{key: value, ...}`` with native Python types.
+    """
     return _list(cur, _VISIT, visit_id)
 
 
 def delete_visit(cur, visit_id: int, key: str) -> bool:
-    """Delete ``(visit_id, key)``. Returns True iff a row was removed."""
+    """Delete ``(visit_id, key)``.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        visit_id: Parent visit.
+        key: Metadata key name.
+
+    Returns:
+        ``True`` iff a row was removed.
+    """
     return _delete(cur, _VISIT, visit_id, key)
 
 
@@ -196,20 +260,59 @@ def delete_visit(cur, visit_id: int, key: str) -> bool:
 # --------------------------------------------------------------------------- #
 
 def set_sample(cur, sample_id: int, key: str, value: Any) -> SetResult:
-    """Upsert ``(sample_id, key)`` with *value*. See :func:`set_visit`."""
+    """Upsert a sample_metadata entry. Idempotent.
+
+    See [`set_visit`][dbmaria_utils.metadata.set_visit] for the
+    contract; this is the sample-keyed variant.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        sample_id: Parent sample.
+        key: Metadata key name (unique per sample).
+        value: ``bool`` / ``int`` / ``float`` / ``str``.
+
+    Returns:
+        ``"inserted"`` / ``"updated"`` / ``"unchanged"``.
+    """
     return _set(cur, _SAMPLE, sample_id, key, value)
 
 
 def get_sample(cur, sample_id: int, key: str) -> Any:
-    """Return the native value for ``(sample_id, key)``, or ``None``."""
+    """Return the native value for ``(sample_id, key)``.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        sample_id: Parent sample.
+        key: Metadata key name.
+
+    Returns:
+        The decoded value, or ``None`` if the key is not set.
+    """
     return _get(cur, _SAMPLE, sample_id, key)
 
 
 def list_for_sample(cur, sample_id: int) -> dict[str, Any]:
-    """Return all metadata for *sample_id* as ``{key: value, ...}``."""
+    """Return all metadata for a sample as a key/value dict.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        sample_id: Parent sample.
+
+    Returns:
+        ``{key: value, ...}`` with native Python types.
+    """
     return _list(cur, _SAMPLE, sample_id)
 
 
 def delete_sample(cur, sample_id: int, key: str) -> bool:
-    """Delete ``(sample_id, key)``. Returns True iff a row was removed."""
+    """Delete ``(sample_id, key)``.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        sample_id: Parent sample.
+        key: Metadata key name.
+
+    Returns:
+        ``True`` iff a row was removed.
+    """
     return _delete(cur, _SAMPLE, sample_id, key)

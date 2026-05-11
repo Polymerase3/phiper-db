@@ -113,19 +113,27 @@ def samples_for_project(
     sample_type: str | None = None,
     has_files: bool | None = None,
 ) -> "pd.DataFrame":
-    """Return one row per sample in *project_id*, joined with parent IDs.
+    """Return one row per sample in a project, joined with parent IDs.
 
-    Columns: ``project_id``, ``subject_id``, ``subject_code``, ``visit_id``,
-    ``timepoint``, ``sample_id``, ``sample_name``, ``sample_type``, ``SQR``,
-    ``SQRP``, ``library``, ``antibody_class``.
+    Output columns: ``project_id``, ``subject_id``, ``subject_code``,
+    ``visit_id``, ``timepoint``, ``sample_id``, ``sample_name``,
+    ``sample_type``, ``SQR``, ``SQRP``, ``library``, ``antibody_class``.
 
-    Optional filters:
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        project_id: Project to scan.
+        file_type: Keep only samples that have at least one registered
+            file of this type.
+        sample_type: Keep only samples whose ``sample_type`` matches.
+        has_files: If ``True``, keep only samples with ≥ 1 file. If
+            ``False``, keep only samples with no files. If ``None``, no
+            filter.
 
-    - *file_type*: keep only samples that have at least one registered file
-      of this type.
-    - *sample_type*: keep only samples with this ``sample_type``.
-    - *has_files*: if True, keep only samples with ≥1 file; if False, keep
-      only samples with no files; if None, no filter.
+    Returns:
+        A ``pandas.DataFrame`` with one row per matching sample.
+
+    Raises:
+        ImportError: If pandas is not installed.
     """
     pd = _pd()
     # Params must be built in SQL textual order (JOIN ... WHERE ...) because
@@ -189,17 +197,29 @@ def samples_with_metadata(
 ) -> "pd.DataFrame":
     """Pivot EAV metadata into one row per sample (wide form).
 
-    The base columns come from :func:`samples_for_project`. Each metadata
-    key becomes a column. Sample-level metadata keys are taken from
-    ``sample_metadata``; when *include_visit_metadata* is True, visit-level
-    keys from ``visit_metadata`` are also added (prefixed with ``visit_``
-    if a name collision with a sample-level key occurs).
+    The base columns come from
+    [`samples_for_project`][dbmaria_utils.queries.samples_for_project].
+    Each metadata key becomes a column. Sample-level keys are taken from
+    ``sample_metadata``; visit-level keys from ``visit_metadata`` are
+    also added when ``include_visit_metadata`` is ``True``, prefixed
+    with ``visit_`` on name collisions.
 
-    *keys* restricts the set of metadata keys returned. When None, all
-    keys present for the project are included. Keys that do not match
-    ``^[A-Za-z_][A-Za-z0-9_]*$`` are silently dropped to keep DataFrame
-    column names well-formed; mention these in user docs if you rely on
-    exotic key names.
+    Keys that do not match ``^[A-Za-z_][A-Za-z0-9_]*$`` are silently
+    dropped to keep DataFrame column names well-formed.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        project_id: Project to pivot.
+        keys: Restrict to this set of metadata keys. ``None`` keeps all
+            keys present for the project.
+        include_visit_metadata: Whether to also pivot visit-level keys.
+
+    Returns:
+        A ``pandas.DataFrame`` with one row per sample and one column
+        per metadata key.
+
+    Raises:
+        ImportError: If pandas is not installed.
     """
     pd = _pd()
     base = samples_for_project(cur, project_id)
@@ -275,12 +295,23 @@ def samples_with_metadata(
 
 
 def project_tidy_table(cur, project_id: int) -> "pd.DataFrame":
-    """Full tidy table for *project_id* — every sample × every metadata key.
+    """Full tidy table for a project — every sample × every metadata key.
 
-    Convenience wrapper over :func:`samples_with_metadata` with both
-    sample- and visit-level metadata included. The intended use is
-    ``df.to_csv(...)`` / ``df.to_excel(...)`` for downstream analysis in
-    pandas or R.
+    Convenience wrapper over
+    [`samples_with_metadata`][dbmaria_utils.queries.samples_with_metadata]
+    with both sample- and visit-level metadata included. The intended
+    use is ``df.to_csv(...)`` / ``df.to_excel(...)`` for downstream
+    analysis in pandas or R.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        project_id: Project to pivot.
+
+    Returns:
+        A ``pandas.DataFrame`` ready to write to CSV / XLSX.
+
+    Raises:
+        ImportError: If pandas is not installed.
     """
     return samples_with_metadata(cur, project_id, keys=None, include_visit_metadata=True)
 
@@ -296,11 +327,23 @@ def files_for_project(
     file_type: str | None = None,
     storage_tier: str | None = None,
 ) -> "pd.DataFrame":
-    """Return one row per registered file in *project_id*.
+    """Return one row per registered file in a project.
 
     Columns include the ``sample_files`` row plus parent identifiers
-    (``sample_name``, ``subject_code``, ``timepoint``) so the result can
-    be filtered/grouped without further joins.
+    (``sample_name``, ``subject_code``, ``timepoint``) so the result
+    can be filtered/grouped without further joins.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        project_id: Project to scan.
+        file_type: Optional ``file_type`` filter.
+        storage_tier: Optional ``storage_tier`` filter.
+
+    Returns:
+        A ``pandas.DataFrame`` with one row per matching file.
+
+    Raises:
+        ImportError: If pandas is not installed.
     """
     pd = _pd()
     where = ["s.project_id = ?"]
@@ -331,12 +374,19 @@ def files_for_project(
 # --------------------------------------------------------------------------- #
 
 def project_summary(cur, project_id: int) -> dict[str, Any]:
-    """Return counts for *project_id*: subjects, visits, samples, files.
+    """Return counts for a project: subjects, visits, samples, files.
 
-    The ``files_by_type`` sub-dict gives a per-``file_type`` breakdown.
-    Returns ``{"project_id": project_id, ...}`` with zero counts if the
-    project has no rows; raises nothing if the project does not exist
-    (the report just shows zeros).
+    Does not raise if the project does not exist — the report just
+    shows zeros. Has no pandas dependency.
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        project_id: Project to summarize.
+
+    Returns:
+        ``{"project_id", "n_subjects", "n_visits", "n_samples",
+        "n_files", "files_by_type"}`` where ``files_by_type`` is a
+        ``dict[str, int]`` keyed by ``file_type``.
     """
     cur.execute(
         "SELECT COUNT(*) FROM subjects WHERE project_id = ?", (project_id,)
@@ -386,14 +436,24 @@ def find_db_files_missing_on_disk(
     *,
     project_id: int | None = None,
 ) -> "pd.DataFrame":
-    """Return DB-registered files whose ``file_path`` does not exist on disk.
+    """Return DB-registered files whose path does not exist on disk.
 
-    Useful as a cron job to detect drift between the database and storage.
-    When *project_id* is given, the scan is limited to that project; when
-    None, every file in ``sample_files`` is checked. ``os.path.exists``
-    follows symlinks, so a dangling link reads as missing.
+    Useful as a cron job to detect drift between the database and
+    storage. ``os.path.exists`` follows symlinks, so a dangling link
+    reads as missing.
 
-    Columns: same as :func:`files_for_project`.
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        project_id: Limit the scan to a single project; ``None`` checks
+            every row in ``sample_files``.
+
+    Returns:
+        A ``pandas.DataFrame`` with the same columns as
+        [`files_for_project`][dbmaria_utils.queries.files_for_project],
+        containing only rows whose path is missing.
+
+    Raises:
+        ImportError: If pandas is not installed.
     """
     pd = _pd()
     where = []
@@ -425,17 +485,25 @@ def find_disk_files_missing_in_db(
     *,
     roots: list[str] | None = None,
 ) -> "pd.DataFrame":
-    """Return regular files under *roots* that are NOT in ``sample_files``.
+    """Return regular files under roots that are NOT in ``sample_files``.
 
-    When *roots* is None, scans both ``LABDB_ARCHIVE_ROOT`` and
-    ``LABDB_WORK_ROOT`` (defaults ``/lisc/archive`` and ``/lisc/work``).
-    Roots that don't exist on the current host are silently skipped, which
-    makes the function safe to call from a laptop with no LiSC mount.
+    This is a full filesystem walk; on a real archive it can take
+    minutes. Restrict via *roots* in interactive use. Roots that don't
+    exist on the current host are silently skipped, which makes the
+    function safe to call from a laptop with no LiSC mount.
 
-    Columns: ``file_path``, ``root``, ``file_size_bytes``.
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        roots: List of directories to walk. ``None`` scans
+            ``LABDB_ARCHIVE_ROOT`` and ``LABDB_WORK_ROOT`` (defaults
+            ``/lisc/archive`` and ``/lisc/work``).
 
-    Note: this is a full filesystem walk; on a real archive it can take
-    minutes. Restrict via *roots* in interactive use.
+    Returns:
+        A ``pandas.DataFrame`` with columns ``file_path``, ``root``,
+        ``file_size_bytes``.
+
+    Raises:
+        ImportError: If pandas is not installed.
     """
     pd = _pd()
     if roots is None:
@@ -465,23 +533,30 @@ def find_disk_files_missing_in_db(
 
 
 def integrity_check(cur, project_id: int) -> dict[str, Any]:
-    """Run a battery of sanity checks for *project_id*. Read-only.
+    """Run a battery of sanity checks for a project. Read-only.
 
-    Returns a report:
+    Does not touch the filesystem beyond ``realpath`` string operations
+    on the configured roots.
 
-    - ``samples_without_files``: list of ``{sample_id, sample_name}`` with
-      zero registered files.
-    - ``archive_files_missing_md5``: archive-tier files with NULL
-      ``checksum_md5`` (archive convention: always store the checksum).
-    - ``files_outside_tier_root``: files whose ``file_path`` does not live
-      under the root configured for their ``storage_tier``. Includes
-      ``scratch`` / ``external`` rows only when the path resolves outside
-      both LABDB roots.
-    - ``unknown_file_types``: ``sample_files`` rows whose ``file_type`` is
-      not in the canonical set (defensive — the ENUM should prevent this).
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        project_id: Project to check.
 
-    The check itself does not touch the filesystem beyond ``realpath``
-    string operations on the configured roots.
+    Returns:
+        A report dict with these keys:
+
+        - ``samples_without_files``: list of ``{sample_id,
+          sample_name}`` with zero registered files.
+        - ``archive_files_missing_md5``: archive-tier files with NULL
+          ``checksum_md5`` (archive convention: always store the
+          checksum).
+        - ``files_outside_tier_root``: files whose ``file_path`` does
+          not live under the root configured for their
+          ``storage_tier``. Includes ``scratch`` / ``external`` rows
+          only when the path resolves outside both LABDB roots.
+        - ``unknown_file_types``: ``sample_files`` rows whose
+          ``file_type`` is not in the canonical set (defensive — the
+          ENUM should prevent this).
     """
     report: dict[str, Any] = {
         "project_id": project_id,
