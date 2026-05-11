@@ -10,6 +10,26 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-11
+
+### Added
+- Documentation site scaffold built with MkDocs + Material theme +
+  mkdocstrings (`mkdocs.yml`, `docs/{index,install,quickstart,schema,
+  cli,contributing,changelog}.md`, and per-module pages under
+  `docs/reference/`). Auto-generates API reference from package
+  docstrings; `NEWS.md` and `CONTRIBUTING.md` are surfaced via
+  `mkdocs-include-markdown-plugin`.
+- `CONTRIBUTING.md` documenting dev setup, branching, the version +
+  `NEWS.md` requirement enforced by `pr-checks.yml`, docstring style,
+  and how to preview the docs locally.
+- `.github/workflows/docs.yml` — builds the site with `mkdocs build
+  --strict` on every PR and deploys to GitHub Pages on every push to
+  `main`. Concurrency group keeps deploys serialized.
+- `docs` optional-dependency group in `pyproject.toml`
+  (`mkdocs-material`, `mkdocstrings[python]`,
+  `mkdocs-include-markdown-plugin`). `pip install -e ".[docs]"` then
+  `mkdocs serve` is the local preview path.
+
 ## [0.3.0] - 2026-05-11
 
 ### Added
