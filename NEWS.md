@@ -10,6 +10,24 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-05-11
+
+### Added
+- `fetch` module that materializes a project from the database to a
+  local folder:
+  - `export_metadata_table` — write the project tidy table to CSV and/or
+    XLSX (requires `pandas`, plus `openpyxl` for `xlsx`).
+  - `download_files_for_project` — copy every registered file for a
+    project into a target directory. Uses paramiko SFTP when an
+    `ssh_host` is configured (via `~/.my.cnf [labdb-ssh]`, `LABDB_SSH_*`
+    env vars, or kwargs), and falls back to `shutil.copyfile` when
+    running on LiSC with the storage mounted locally. Supports
+    `by_sample`, `by_type`, and `flat` output layouts; resumes by
+    skipping destinations that already exist.
+  - `export_project` — one-shot snapshot: `metadata.csv` (and optionally
+    `metadata.xlsx`), `files/<layout>/...`, and a `README.txt` summary.
+- `paramiko>=3.0` added to the `analysis` optional-dependency group.
+
 ## [0.2.2] - 2026-05-11
 
 ### Fixed
