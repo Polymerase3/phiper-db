@@ -1,6 +1,14 @@
 """Python tooling for dbmaria_project."""
 
-from dbmaria_utils import files, metadata, projects, samples, subjects, visits
+from dbmaria_utils import (
+    files,
+    metadata,
+    projects,
+    queries,
+    samples,
+    subjects,
+    visits,
+)
 from dbmaria_utils.connection import (
     close_pool,
     execute,
@@ -17,6 +25,7 @@ __all__ = [
     "init_pool",
     "metadata",
     "projects",
+    "queries",
     "samples",
     "subjects",
     "transaction",
