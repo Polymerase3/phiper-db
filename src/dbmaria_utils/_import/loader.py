@@ -82,11 +82,24 @@ class ProjectBundle:
 # --------------------------------------------------------------------------- #
 
 def load_project_dir(root: str | Path) -> ProjectBundle:
-    """Read all required files from *root* and return a :class:`ProjectBundle`.
+    """Read all required files from a project folder.
 
-    Raises :class:`FileNotFoundError` for missing required files and
-    :class:`ValueError` for missing required columns. Unknown columns
-    produce warnings stored on the bundle.
+    Loading is forgiving — does not check enum values or referential
+    integrity, only structural things (required columns present, file
+    readable, YAML parseable).
+
+    Args:
+        root: Path to the project folder.
+
+    Returns:
+        A
+        [`ProjectBundle`][dbmaria_utils._import.loader.ProjectBundle]
+        with the parsed contents. Unknown columns produce warnings
+        stored on the bundle rather than raising.
+
+    Raises:
+        FileNotFoundError: For missing required files.
+        ValueError: For missing required columns.
     """
     root_path = Path(root)
     if not root_path.is_dir():

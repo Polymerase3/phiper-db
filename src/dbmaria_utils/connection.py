@@ -388,14 +388,36 @@ def init_pool(
 ) -> None:
     """Create the connection pool.
 
-    Raises RuntimeError if the pool is already initialized; call close_pool()
-    first to reconfigure. Pass config_path=None to skip the INI file entirely
-    and rely solely on the keyword overrides (useful for CI / tests).
+    When ``ssh_host`` resolves to a non-empty value (via kwarg,
+    ``LABDB_SSH_HOST``, or the ``[labdb-ssh]`` config section), an SSH
+    tunnel is opened to that host and the pool connects through it;
+    the configured DB ``host:port`` is the tunnel's remote bind target.
 
-    When ssh_host resolves to a non-empty value (via kwarg, LABDB_SSH_HOST, or
-    the [labdb-ssh] config section), an SSH tunnel is opened to that host and
-    the pool connects through it; the configured DB host:port is the tunnel's
-    remote bind target.
+    Args:
+        pool_size: Number of pooled connections.
+        config_path: Path to the MariaDB-style config file. Pass
+            ``None`` to skip the INI file entirely and rely solely on
+            keyword overrides (useful for CI / tests).
+        section: INI section to read DB credentials from.
+        host: DB host override. Wins over the config file.
+        port: DB port override.
+        user: DB user override.
+        password: DB password override.
+        database: DB name override. Also honours the ``LABDB_DATABASE``
+            env var (env var loses to an explicit kwarg).
+        ssh_host: SSH jump host. When non-empty, a tunnel is opened.
+        ssh_port: SSH port (default 22).
+        ssh_user: SSH username.
+        ssh_password: SSH password (used if ``ssh_pkey`` not set).
+        ssh_pkey: Path to private key. Tried first for auth.
+        ssh_pkey_password: Passphrase for ``ssh_pkey``, if any.
+
+    Raises:
+        RuntimeError: If the pool is already initialized (call
+            [`close_pool`][dbmaria_utils.connection.close_pool] first
+            to reconfigure), or if SSH credentials are incomplete, or
+            if required DB credentials are missing.
+        FileNotFoundError: If ``config_path`` is set but missing.
     """
     global _pool, _pool_counter, _tunnel
     if _pool is not None:
@@ -455,7 +477,13 @@ def init_pool(
 
 
 def close_pool() -> None:
-    """Close the pool, tear down any SSH tunnel, and release the audit log handler."""
+    """Close the pool, tear down the SSH tunnel, and release audit handlers.
+
+    Safe to call when no pool exists. Used by test teardown and at
+    shutdown. After this returns,
+    [`init_pool`][dbmaria_utils.connection.init_pool] can be called
+    again.
+    """
     global _pool, _tunnel
     if _pool is not None:
         try:
@@ -501,7 +529,17 @@ def _force_server_autocommit_off(conn: mariadb.Connection) -> None:
 
 @contextmanager
 def get_connection() -> Iterator[mariadb.Connection]:
-    """Yield a pooled connection. Commits on success, rolls back on exception."""
+    """Yield a pooled connection.
+
+    The connection commits on normal exit of the ``with`` block and
+    rolls back on any exception. The pool is initialized lazily on
+    first call with default settings. Server-side ``autocommit=0`` is
+    re-asserted on every checkout to defend against pool-reset drift.
+
+    Yields:
+        A ``mariadb.Connection`` borrowed from the pool. Returned to
+        the pool (not destroyed) when the ``with`` block exits.
+    """
     conn = _get_pool().get_connection()
     # Pool reset between uses can revert server-side autocommit to the
     # server default (1 on MariaDB), which would silently break our rollback
@@ -573,9 +611,15 @@ class _LoggingCursor:
 def transaction() -> Iterator[_LoggingCursor]:
     """Yield an audit-logging cursor. All statements share one transaction.
 
-    Commit and rollback are inherited from get_connection(): if the with-block
-    exits normally everything commits; if any statement raises, everything
-    rolls back atomically.
+    Commit and rollback are inherited from
+    [`get_connection`][dbmaria_utils.connection.get_connection]: if the
+    ``with`` block exits normally everything commits; if any statement
+    raises, everything rolls back atomically.
+
+    Yields:
+        A ``_LoggingCursor`` that audits write statements
+        (INSERT/UPDATE/DELETE/REPLACE) to ``~/.labdb/audit.log``
+        (override via ``LABDB_AUDIT_LOG``).
     """
     with get_connection() as conn:
         cursor = _LoggingCursor(conn.cursor())
@@ -588,11 +632,18 @@ def transaction() -> Iterator[_LoggingCursor]:
 def execute(query: str, params: Any = None) -> list[dict[str, Any]]:
     """Run one query and return rows as a list of dicts.
 
-    SELECT statements return one dict per row (column name -> value).
-    INSERT/UPDATE/DELETE/REPLACE statements return [] and are audit-logged.
+    Each call uses its own pooled connection and its own transaction;
+    for multi-statement atomicity use
+    [`transaction`][dbmaria_utils.connection.transaction] instead.
 
-    Each call uses its own pooled connection and its own transaction; for
-    multi-statement atomicity use transaction() instead.
+    Args:
+        query: SQL statement, optionally with ``?`` placeholders.
+        params: Bind parameters. ``None`` is normalized to ``()``.
+
+    Returns:
+        For SELECT, one ``dict[str, Any]`` per row (column name →
+        value). For INSERT/UPDATE/DELETE/REPLACE, an empty list (and
+        the statement is audit-logged).
     """
     with get_connection() as conn:
         cur = conn.cursor()
