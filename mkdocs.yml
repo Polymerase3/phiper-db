@@ -1,0 +1,100 @@
+site_name: phiper-db
+site_description: Schema, migrations, and Python tooling for the lab's MariaDB metadata database.
+site_url: https://polymerase3.github.io/phiper-db/
+repo_url: https://github.com/Polymerase3/phiper-db
+repo_name: Polymerase3/phiper-db
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - search.suggest
+    - search.highlight
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - include-markdown
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_signature_annotations: true
+            separate_signature: true
+            members_order: source
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            filters: ["!^_"]
+            merge_init_into_class: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets
+  - pymdownx.highlight:
+      anchor_linenums: true
+
+nav:
+  - Home: index.md
+  - Install: install.md
+  - Quickstart: quickstart.md
+  - Schema: schema.md
+  - CLI: cli.md
+  - Testing: testing.md
+  - API reference:
+      - reference/index.md
+      - connection: reference/connection.md
+      - projects: reference/projects.md
+      - subjects: reference/subjects.md
+      - visits: reference/visits.md
+      - samples: reference/samples.md
+      - metadata: reference/metadata.md
+      - files: reference/files.md
+      - queries: reference/queries.md
+      - workflows: reference/workflows.md
+      - fetch: reference/fetch.md
+      - Project import: reference/import.md
+  - Contributing: contributing.md
+  - Changelog: changelog.md
