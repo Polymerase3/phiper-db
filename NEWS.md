@@ -10,6 +10,32 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-11
+
+### Added
+- Composite read-only `queries` module in `dbmaria_utils`:
+  - `samples_for_project` — join `projects → subjects → visits → samples`
+    with optional filters on `file_type`, `sample_type`, and `has_files`.
+  - `samples_with_metadata` / `project_tidy_table` — EAV pivot from
+    `sample_metadata` (and optionally `visit_metadata`) into a wide-form
+    `pandas.DataFrame`. Visit-level keys colliding with sample-level keys
+    are renamed with a `visit_` prefix. Metadata key names are filtered
+    against `^[A-Za-z_][A-Za-z0-9_]*$` for safe DataFrame columns.
+  - `files_for_project` — `sample_files` joined with parent identifiers,
+    filtered by `file_type` and/or `storage_tier`.
+  - `project_summary` — counts of subjects/visits/samples/files plus
+    per-`file_type` breakdown (returns a `dict`, no pandas dependency).
+  - `find_db_files_missing_on_disk` — DB rows whose `file_path` is gone
+    from disk; suitable for a cron sweep.
+  - `find_disk_files_missing_in_db` — regular files under
+    `LABDB_ARCHIVE_ROOT` / `LABDB_WORK_ROOT` (or caller-provided roots)
+    that are not registered in `sample_files`.
+  - `integrity_check` — per-project report covering samples without files,
+    archive files without MD5, and files outside their tier root.
+- `analysis` optional-dependency group in `pyproject.toml` for
+  `pandas` + `openpyxl`. Tests depend on `pandas` and skip DataFrame
+  assertions when it is missing.
+
 ## [0.2.0] - 2026-05-09
 
 ### Added

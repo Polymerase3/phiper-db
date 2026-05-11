@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "phiper-db"
-version = "0.2.0"
+version = "0.2.1"
 description = "Schema, migrations, and Python tooling for the lab's MariaDB metadata database."
 requires-python = ">=3.10"
 authors = [
@@ -20,6 +20,11 @@ dependencies = [
 test = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
+    "pandas>=2.0",
+]
+analysis = [
+    "pandas>=2.0",
+    "openpyxl>=3.1",
 ]
 
 [tool.setuptools.packages.find]
