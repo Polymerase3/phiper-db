@@ -128,18 +128,24 @@ def samples_for_project(
       only samples with no files; if None, no filter.
     """
     pd = _pd()
-    where = ["s.project_id = ?"]
-    params: list[Any] = [project_id]
+    # Params must be built in SQL textual order (JOIN ... WHERE ...) because
+    # MariaDB binds placeholders positionally. The file_type filter lives in
+    # a JOIN clause emitted before the WHERE, so its parameter has to come
+    # first.
+    join_params: list[Any] = []
     join_files = ""
     if file_type is not None:
         join_files = (
             " JOIN sample_files f ON f.sample_id = sm.sample_id "
             "AND f.file_type = ?"
         )
-        params.append(file_type)
+        join_params.append(file_type)
+    where = ["s.project_id = ?"]
+    where_params: list[Any] = [project_id]
     if sample_type is not None:
         where.append("sm.sample_type = ?")
-        params.append(sample_type)
+        where_params.append(sample_type)
+    params = join_params + where_params
 
     cur.execute(
         "SELECT s.project_id, s.subject_id, s.subject_code, "
