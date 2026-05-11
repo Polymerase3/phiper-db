@@ -10,6 +10,30 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-11
+
+### Added
+- Master import: load a whole project folder (`project.yaml`,
+  `subjects.csv`, `visits.csv`, `samples.csv`, `files/manifest.csv`)
+  into the database in one atomic transaction.
+  - `dbmaria_utils._import.import_project_from_dir(root, *, dry_run,
+    force, compute_md5, skip_disk_check, log_dir)` is the library entry
+    point; it raises `ProjectImportError` with an exhaustive list of
+    collected errors when validation fails.
+  - `scripts/import_project.py` is the matching CLI, exits 0 / 2 / 3
+    for success / validation failure / unexpected error and writes a
+    JSON report to stdout plus `<log_dir>/<ts>_<project>.log`.
+  - CSV columns prefixed with `meta_` are treated as typed metadata
+    keys; values are coerced int → float → bool → str.
+  - Re-running on the same folder requires `--force` (or `force=True`).
+    With `--force` the importer is idempotent: re-uses every existing
+    row via `get_or_create`/`set_*` and reports `inserted` vs
+    `existing`/`unchanged` per table.
+  - Cross-project collisions on `sample_name` / `file_path` are blocked
+    even with `--force` (those UNIQUEs are global by design).
+- `pyyaml>=6.0` added as a hard dependency (required to read
+  `project.yaml`).
+
 ## [0.2.3] - 2026-05-11
 
 ### Added
