@@ -135,56 +135,85 @@ def samples_for_project(
     Raises:
         ImportError: If pandas is not installed.
     """
-    pd = _pd()
-    # Params must be built in SQL textual order (JOIN ... WHERE ...) because
-    # MariaDB binds placeholders positionally. The file_type filter lives in
-    # a JOIN clause emitted before the WHERE, so its parameter has to come
-    # first.
-    join_params: list[Any] = []
-    join_files = ""
-    if file_type is not None:
-        join_files = (
-            " JOIN sample_files f ON f.sample_id = sm.sample_id "
-            "AND f.file_type = ?"
-        )
-        join_params.append(file_type)
-    where = ["s.project_id = ?"]
-    where_params: list[Any] = [project_id]
-    if sample_type is not None:
-        where.append("sm.sample_type = ?")
-        where_params.append(sample_type)
-    params = join_params + where_params
-
+    # Step 1: subjects for this project (indexed on project_id).
     cur.execute(
-        "SELECT s.project_id, s.subject_id, s.subject_code, "
-        "v.visit_id, v.timepoint, "
-        "sm.sample_id, sm.sample_name, sm.sample_type, "
-        "sm.SQR, sm.SQRP, sm.library, sm.antibody_class "
-        "FROM subjects s "
-        "JOIN visits v ON v.subject_id = s.subject_id "
-        "JOIN samples sm ON sm.visit_id = v.visit_id"
-        + join_files
-        + " WHERE " + " AND ".join(where)
-        + " GROUP BY sm.sample_id "  # dedupe in case of file_type join multi-match
-        + "ORDER BY sm.sample_id",
-        tuple(params),
+        "SELECT subject_id, project_id, subject_code FROM subjects WHERE project_id = ?",
+        (project_id,),
     )
-    rows = _fetch_dicts(cur)
+    subj_rows = _fetch_dicts(cur)
+    if not subj_rows:
+        return _pd().DataFrame()
+    subject_ids = [r["subject_id"] for r in subj_rows]
+    subj_map = {r["subject_id"]: r for r in subj_rows}
 
-    if has_files is not None and rows:
-        sample_ids = [r["sample_id"] for r in rows]
-        placeholders = ",".join(["?"] * len(sample_ids))
+    # Step 2: visits for those subjects (indexed on subject_id).
+    s_ph = ",".join(["?"] * len(subject_ids))
+    cur.execute(
+        f"SELECT visit_id, subject_id, timepoint FROM visits WHERE subject_id IN ({s_ph})",
+        tuple(subject_ids),
+    )
+    visit_rows = _fetch_dicts(cur)
+    if not visit_rows:
+        return _pd().DataFrame()
+    visit_ids = [r["visit_id"] for r in visit_rows]
+    visit_map = {r["visit_id"]: r for r in visit_rows}
+
+    # Step 3: samples for those visits (indexed on visit_id).
+    v_ph = ",".join(["?"] * len(visit_ids))
+    s_where = f"WHERE visit_id IN ({v_ph})"
+    s_params: list[Any] = list(visit_ids)
+    if sample_type is not None:
+        s_where += " AND sample_type = ?"
+        s_params.append(sample_type)
+    cur.execute(
+        "SELECT sample_id, visit_id, sample_name, sample_type, "
+        f"SQR, SQRP, library, antibody_class FROM samples {s_where} ORDER BY sample_id",
+        tuple(s_params),
+    )
+    sample_rows = _fetch_dicts(cur)
+    if not sample_rows:
+        return _pd().DataFrame()
+
+    pd = _pd()
+
+    # Step 4: optional file filters — one indexed lookup against sample_files.
+    if has_files is not None or file_type is not None:
+        sm_ids = [r["sample_id"] for r in sample_rows]
+        f_ph = ",".join(["?"] * len(sm_ids))
+        f_where = f"WHERE sample_id IN ({f_ph})"
+        f_params: list[Any] = list(sm_ids)
+        if file_type is not None:
+            f_where += " AND file_type = ?"
+            f_params.append(file_type)
         cur.execute(
-            "SELECT sample_id, COUNT(*) AS n FROM sample_files "
-            f"WHERE sample_id IN ({placeholders}) GROUP BY sample_id",
-            tuple(sample_ids),
+            f"SELECT DISTINCT sample_id FROM sample_files {f_where}",
+            tuple(f_params),
         )
-        with_files = {int(r["sample_id"]) for r in _fetch_dicts(cur)}
-        if has_files:
-            rows = [r for r in rows if int(r["sample_id"]) in with_files]
-        else:
-            rows = [r for r in rows if int(r["sample_id"]) not in with_files]
+        ids_with_files = {row[0] for row in cur.fetchall()}
+        if has_files is True or file_type is not None:
+            sample_rows = [r for r in sample_rows if r["sample_id"] in ids_with_files]
+        else:  # has_files is False
+            sample_rows = [r for r in sample_rows if r["sample_id"] not in ids_with_files]
 
+    # Assemble flat rows in Python — no extra round trips.
+    rows = []
+    for sr in sample_rows:
+        vr = visit_map[sr["visit_id"]]
+        sj = subj_map[vr["subject_id"]]
+        rows.append({
+            "project_id": sj["project_id"],
+            "subject_id": sj["subject_id"],
+            "subject_code": sj["subject_code"],
+            "visit_id": vr["visit_id"],
+            "timepoint": vr["timepoint"],
+            "sample_id": sr["sample_id"],
+            "sample_name": sr["sample_name"],
+            "sample_type": sr["sample_type"],
+            "SQR": sr["SQR"],
+            "SQRP": sr["SQRP"],
+            "library": sr["library"],
+            "antibody_class": sr["antibody_class"],
+        })
     return pd.DataFrame(rows)
 
 

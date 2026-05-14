@@ -40,6 +40,7 @@ import getpass
 import logging
 import os
 import re
+import socket
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
@@ -238,6 +239,8 @@ def _load_ssh_credentials(config_path: Path, section: str) -> dict[str, Any]:
         creds["ssh_host"] = sect["ssh_host"]
     if "ssh_port" in sect:
         creds["ssh_port"] = int(sect["ssh_port"])
+    if "local_port" in sect:
+        creds["local_port"] = int(sect["local_port"])
     for key in ("ssh_user", "ssh_password", "ssh_pkey", "ssh_pkey_password"):
         if key in sect:
             creds[key] = sect[key]
@@ -273,8 +276,27 @@ def _resolve_ssh_credentials(
     return creds
 
 
-def _open_tunnel(ssh_creds: dict[str, Any], remote_host: str, remote_port: int) -> Any:
-    """Start an SSH tunnel forwarding 127.0.0.1:<random> -> remote_host:remote_port."""
+def _is_port_open(port: int) -> bool:
+    """Return True if something is already listening on 127.0.0.1:port."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(1)
+        try:
+            s.connect(("127.0.0.1", port))
+            return True
+        except OSError:
+            return False
+
+
+def _open_tunnel(
+    ssh_creds: dict[str, Any],
+    remote_host: str,
+    remote_port: int,
+    local_port: int = 0,
+) -> Any:
+    """Start an SSH tunnel forwarding 127.0.0.1:<local_port> -> remote_host:remote_port.
+
+    Pass ``local_port=0`` (default) to let the OS assign a free port.
+    """
     try:
         from sshtunnel import SSHTunnelForwarder
     except ImportError as exc:
@@ -292,7 +314,7 @@ def _open_tunnel(ssh_creds: dict[str, Any], remote_host: str, remote_port: int) 
     kwargs: dict[str, Any] = {
         "ssh_username": ssh_creds["ssh_user"],
         "remote_bind_address": (remote_host, int(remote_port)),
-        "local_bind_address": ("127.0.0.1", 0),
+        "local_bind_address": ("127.0.0.1", local_port),
     }
     # Auth: pass whichever credentials the user gave; paramiko prefers key over
     # password when both are present, and falls back to the agent / default
@@ -450,7 +472,16 @@ def init_pool(
         },
     )
 
-    if ssh_creds.get("ssh_host"):
+    effective_local_port: int | None = None
+
+    cfg_local_port = int(ssh_creds.get("local_port", 0))
+    if cfg_local_port and _is_port_open(cfg_local_port):
+        effective_local_port = cfg_local_port
+
+    if effective_local_port is not None:
+        creds["host"] = "127.0.0.1"
+        creds["port"] = effective_local_port
+    elif ssh_creds.get("ssh_host"):
         _tunnel = _open_tunnel(ssh_creds, creds["host"], creds["port"])
         local_host, local_port = _tunnel.local_bind_address
         creds["host"] = local_host
@@ -463,6 +494,9 @@ def init_pool(
             pool_name=pool_name,
             pool_size=pool_size,
             autocommit=False,
+            read_timeout=15,
+            write_timeout=15,
+            connect_timeout=10,
             **creds,
         )
     except Exception:
