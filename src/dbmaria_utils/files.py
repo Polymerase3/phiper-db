@@ -171,12 +171,6 @@ def _resolve_tier(file_type: str, override: str | None) -> str:
         raise ValueError(
             f"storage_tier must be one of {sorted(_ALL_TIERS)}, got {override!r}"
         )
-    if override in {"archive", "work"} and override != expected:
-        raise ValueError(
-            f"storage_tier override {override!r} conflicts with file_type "
-            f"{file_type!r} (expected {expected!r}); override is only allowed "
-            "to 'scratch' or 'external'"
-        )
     return override
 
 
@@ -187,9 +181,14 @@ def _inspect_file(
     compute_md5: bool,
     checksum_md5: str | None,
     storage_tier: str | None,
+    skip_disk_check: bool = False,
 ) -> dict[str, Any]:
     """Run all filesystem and policy checks. Returns the row to insert
-    minus ``sample_id``. Raises before any SQL is touched."""
+    minus ``sample_id``. Raises before any SQL is touched.
+
+    When ``skip_disk_check`` is ``True``, path-prefix and on-disk checks
+    (stat, md5) are skipped; ``file_size_bytes`` is stored as ``None``.
+    """
     if compute_md5 and checksum_md5 is not None:
         raise ValueError(
             "pass either compute_md5=True or checksum_md5=..., not both"
@@ -200,21 +199,28 @@ def _inspect_file(
         )
     _validate_extension(file_path, file_type)
     tier = _resolve_tier(file_type, storage_tier)
-    _validate_tier_path(
-        file_path, tier,
-        archive_root=_archive_root(),
-        work_root=_work_root(),
-    )
-    st = _stat_regular_file(file_path)
-    size = int(st.st_size)
+    size: int | None
     md5: str | None
-    if checksum_md5 is not None:
-        _validate_md5(checksum_md5)
+    if skip_disk_check:
+        size = None
         md5 = checksum_md5
-    elif compute_md5:
-        md5 = _compute_md5(file_path)
+        if md5 is not None:
+            _validate_md5(md5)
     else:
-        md5 = None
+        _validate_tier_path(
+            file_path, tier,
+            archive_root=_archive_root(),
+            work_root=_work_root(),
+        )
+        st = _stat_regular_file(file_path)
+        size = int(st.st_size)
+        if checksum_md5 is not None:
+            _validate_md5(checksum_md5)
+            md5 = checksum_md5
+        elif compute_md5:
+            md5 = _compute_md5(file_path)
+        else:
+            md5 = None
     return {
         "file_type": file_type,
         "file_path": file_path,
@@ -241,6 +247,7 @@ def register(
     compute_md5: bool = False,
     checksum_md5: str | None = None,
     storage_tier: str | None = None,
+    skip_disk_check: bool = False,
 ) -> int:
     """Validate a file on disk and insert a `sample_files` row.
 
@@ -280,6 +287,7 @@ def register(
         compute_md5=compute_md5,
         checksum_md5=checksum_md5,
         storage_tier=storage_tier,
+        skip_disk_check=skip_disk_check,
     )
     cur.execute(
         "INSERT INTO sample_files "
@@ -306,6 +314,7 @@ def get_or_register(
     compute_md5: bool = False,
     checksum_md5: str | None = None,
     storage_tier: str | None = None,
+    skip_disk_check: bool = False,
 ) -> tuple[int, bool]:
     """Idempotently register a file. Returns ``(file_id, registered)``.
 
@@ -343,6 +352,7 @@ def get_or_register(
             compute_md5=compute_md5,
             checksum_md5=checksum_md5,
             storage_tier=storage_tier,
+            skip_disk_check=skip_disk_check,
         )
     except mariadb.IntegrityError:
         existing = get_by_path(cur, file_path)

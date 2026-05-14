@@ -249,7 +249,7 @@ def _validate_db_collisions(cur, bundle: loader.ProjectBundle) -> list[str]:
 # --------------------------------------------------------------------------- #
 
 def _commit(
-    cur, bundle: loader.ProjectBundle, *, compute_md5: bool,
+    cur, bundle: loader.ProjectBundle, *, compute_md5: bool, skip_disk_check: bool = False,
 ) -> tuple[dict[str, dict[str, int]], int]:
     """Write the bundle to the database. Caller owns the transaction."""
     counts = {
@@ -310,6 +310,7 @@ def _commit(
             compute_md5=compute_md5 and f.checksum_md5 is None,
             checksum_md5=f.checksum_md5,
             storage_tier=f.storage_tier,
+            skip_disk_check=skip_disk_check,
         )
         counts["files"]["inserted" if created else "existing"] += 1
 
@@ -408,7 +409,7 @@ def import_project_from_dir(
         return report
 
     with transaction() as cur:
-        counts, pid = _commit(cur, bundle, compute_md5=compute_md5)
+        counts, pid = _commit(cur, bundle, compute_md5=compute_md5, skip_disk_check=skip_disk_check)
     report.counts = counts
     report.project_id = pid
     report.duration_seconds = time.monotonic() - start
