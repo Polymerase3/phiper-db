@@ -138,13 +138,11 @@ class TestResolveTier:
     def test_override_to_external(self):
         assert _resolve_tier("beer_norm", "external") == "external"
 
-    def test_override_archive_to_work_rejected(self):
-        with pytest.raises(ValueError):
-            _resolve_tier("bam", "work")
+    def test_override_archive_to_work_allowed(self):
+        assert _resolve_tier("bam", "work") == "work"
 
-    def test_override_work_to_archive_rejected(self):
-        with pytest.raises(ValueError):
-            _resolve_tier("beer_norm", "archive")
+    def test_override_work_to_archive_allowed(self):
+        assert _resolve_tier("beer_norm", "archive") == "archive"
 
     def test_unknown_tier_rejected(self):
         with pytest.raises(ValueError):
