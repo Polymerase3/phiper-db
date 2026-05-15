@@ -83,8 +83,8 @@ nav:
   - Home: index.md
   - Install: install.md
   - Quickstart: quickstart.md
+  - Preparing data: data-preparation.md
   - Schema: schema.md
-  - CLI: cli.md
   - Testing: testing.md
   - API reference:
       - reference/index.md
