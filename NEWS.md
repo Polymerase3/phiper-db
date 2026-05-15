@@ -10,6 +10,31 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-05-15
+
+### Added
+- `schema/002_controls_support.sql`: migration that makes `subjects.sex`
+  and `visits.age` nullable (non-null values still constrained to
+  `'M'/'F'` and `>= 0` respectively) and adds `'NC'` to the
+  `samples.sample_type` ENUM.
+- `scripts/prepare_migration.py`: `_detect_sample_type()` infers
+  `sample_type` from substrings in `SampleName` (`Anchor` → `anchor`,
+  `Mock` → `mockIP`, `NC` → `NC`, `input` → `input`). Control samples
+  no longer generate spurious sex/age warnings and are written with
+  blank sex/age (stored as NULL) rather than a placeholder `0`.
+- `users/revoke_readwrite.sql`: one-time script to downgrade
+  `lovro.trgovec-greif` and `melanie.prinzensteiner` to `SELECT`-only.
+
+### Changed
+- `subjects.create` / `subjects.get_or_create`: `sex` parameter is now
+  `str | None`; empty string is normalised to `NULL` on insert.
+- `visits.create` / `visits.get_or_create`: `age` parameter is now
+  `int | None`.
+- Import validation (`runner._validate_schema`): sex and age checks are
+  skipped when the value is empty/null rather than raising an error.
+- `users/users.sql`: `lovro.trgovec-greif` and `melanie.prinzensteiner`
+  reduced to `SELECT`-only, consistent with all other non-admin users.
+
 ## [0.4.3] - 2026-05-14
 
 ### Added
