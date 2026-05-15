@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "noxdb"
-version = "0.5.1"
+version = "0.5.2"
 description = "Schema, migrations, and Python tooling for the lab's MariaDB metadata database."
 requires-python = ">=3.10"
 authors = [

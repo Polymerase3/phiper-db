@@ -10,6 +10,14 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-05-15
+
+### Fixed
+- `README.md`: corrected all documentation site links from `noxdb` to `noxDB`
+  to match the renamed GitHub Pages URL.
+- `README.md`: corrected codecov badge and link to point to the renamed
+  repository (`noxDB`).
+
 ## [0.5.1] - 2026-05-15
 
 ### Changed
