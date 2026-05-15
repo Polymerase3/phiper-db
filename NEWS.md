@@ -10,6 +10,25 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-05-15
+
+### Added
+- `scripts/add_controls.py`: recovers anchor, mock, NC, and input control
+  samples from `Overview_SQRs.csv` (absent from per-project metadata CSVs)
+  and appends them to the four master CSVs in the import directory.
+  Input samples are placed in a standalone `"input"` project. Safe to
+  re-run — already-present `sample_name` entries are silently skipped.
+
+### Fixed
+- `subjects.create` / `subjects.get_or_create`: the `sex or None`
+  normalisation now also converts the literal strings `'NA'` / `'N/A'`
+  to `NULL`, preventing a DB-side `CHECK` constraint violation when
+  `prepare_migration.py` writes those placeholders.
+- Import validation (`runner._validate_schema`, `runner._commit`): sex
+  and age values of `'NA'` / `'N/A'` (written by `prepare_migration.py`
+  for real samples with missing demographics) are now treated as nullish,
+  consistent with the DB schema allowing `NULL` for both columns.
+
 ## [0.4.4] - 2026-05-15
 
 ### Added
