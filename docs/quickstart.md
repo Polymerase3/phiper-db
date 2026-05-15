@@ -400,6 +400,156 @@ finally:
 
 ---
 
+## 14. Full fetch example
+
+The `fetch` module is the consumer side of noxdb: given a project, it
+materialises the project structure, a tidy metadata table, and — when running
+on LiSC or through an SFTP jump host — the actual files.
+
+### Project structure and file manifest
+
+```python
+from noxdb import init_pool, close_pool, transaction
+from noxdb import projects, queries
+
+try:
+    init_pool()
+    with transaction() as cur:
+        project_row = projects.get(cur, project_id=7)
+        summary     = queries.project_summary(cur, project_id=7)
+        dff         = queries.files_for_project(cur, project_id=7)
+finally:
+    close_pool()
+```
+
+`project_row`:
+
+```json
+{
+  "project_id": 7,
+  "project_name": "ADMCI_NED",
+  "description": null,
+  "pi_name": "Arno Bourgonje",
+  "created_at": "2026-05-14T12:27:07"
+}
+```
+
+`summary`:
+
+```json
+{
+  "project_id": 7,
+  "n_subjects": 110,
+  "n_visits": 110,
+  "n_samples": 110,
+  "n_files": 220,
+  "files_by_type": {
+    "counts": 110,
+    "zigp_norm": 110
+  },
+  "n_controls": 64,
+  "controls_by_type": {
+    "mockIP": 32,
+    "anchor": 16,
+    "NC": 16
+  }
+}
+```
+
+`dff` — first 6 rows of 220:
+
+```
+ file_id                        sample_name file_type                                                              file_path storage_tier
+     226 R14P02_77_FAU0001_ADMCI_NED_A_T_C2    counts /lisc/data/work/ccr/counts/R14P02_77_FAU0001_ADMCI_NED_A_T_C2.count.gz         work
+     229 R14P02_77_FAU0001_ADMCI_NED_A_T_C2 zigp_norm        /lisc/data/work/ccr/zigp/R14P02_77_FAU0001_ADMCI_NED_A_T_C2.csv         work
+     232 R14P02_74_FAU0002_ADMCI_NED_A_T_C2    counts /lisc/data/work/ccr/counts/R14P02_74_FAU0002_ADMCI_NED_A_T_C2.count.gz         work
+     235 R14P02_74_FAU0002_ADMCI_NED_A_T_C2 zigp_norm        /lisc/data/work/ccr/zigp/R14P02_74_FAU0002_ADMCI_NED_A_T_C2.csv         work
+     238  R19P04_14_MG0213_ADMCI_NED_A_T_C2    counts  /lisc/data/work/ccr/counts/R19P04_14_MG0213_ADMCI_NED_A_T_C2.count.gz         work
+     241  R19P04_14_MG0213_ADMCI_NED_A_T_C2 zigp_norm         /lisc/data/work/ccr/zigp/R19P04_14_MG0213_ADMCI_NED_A_T_C2.csv         work
+```
+
+### Exporting to a local folder
+
+`fetch.export_project` combines metadata, a README, and (optionally) the
+actual files into a single output directory. Pass `include_files=False` to
+get just the metadata and README without downloading:
+
+```python
+from noxdb import init_pool, close_pool, transaction
+from noxdb import fetch
+
+try:
+    init_pool()
+    with transaction() as cur:
+        result = fetch.export_project(
+            cur,
+            project_id=7,
+            output_dir="exports/ADMCI_NED",
+            include_files=False,          # set True on LiSC to also pull files
+            metadata_formats=("csv",),
+        )
+finally:
+    close_pool()
+```
+
+Output directory layout:
+
+```
+exports/ADMCI_NED/
+├── README.txt     (209 bytes)
+└── metadata.csv   (18,892 bytes)
+```
+
+`README.txt`:
+
+```
+Project: ADMCI_NED (id=7)
+PI: Arno Bourgonje
+Description: -
+Created: 2026-05-14 12:27:07
+
+Counts:
+  subjects: 110
+  visits:   110
+  samples:  110
+  files:    220
+
+Files by type:
+  counts: 110
+  zigp_norm: 110
+```
+
+`result` (the return value):
+
+```json
+{
+  "project":  { "project_id": 7, "project_name": "ADMCI_NED", ... },
+  "summary":  { "n_subjects": 110, "n_files": 220, ... },
+  "metadata": { "csv": "exports/ADMCI_NED/metadata.csv" },
+  "readme":   "exports/ADMCI_NED/README.txt",
+  "output_dir": "exports/ADMCI_NED"
+}
+```
+
+To also download the actual files (requires running on LiSC or an active SFTP
+connection through the SSH gateway):
+
+```python
+result = fetch.export_project(
+    cur,
+    project_id=7,
+    output_dir="exports/ADMCI_NED",
+    include_files=True,
+    file_types=["counts"],        # omit to get all types
+    layout="by_sample",           # or 'by_type' / 'flat'
+)
+```
+
+The `result["files"]` key then contains `downloaded`, `skipped`, and `failed`
+lists so you can see exactly what was fetched and what failed.
+
+---
+
 ## Where to go next
 
 - [API reference](reference/index.md) — every public function.
