@@ -26,10 +26,20 @@ stores **metadata and file pointers**; bulk data lives on disk.
     The `project → subject → visit → sample` hierarchy, table layout,
     and naming conventions.
 
--   :material-console:{ .lg .middle } **[CLI](cli.md)**
+-   :material-table-edit:{ .lg .middle } **[Preparing data](data-preparation.md)**
 
     ---
-    `scripts/import_project.py` — load a whole project folder atomically.
+    How to structure your data before loading it into the database.
+
+-   :material-test-tube:{ .lg .middle } **[Testing](testing.md)**
+
+    ---
+    Running the test suite and writing new tests.
+
+-   :material-hand-heart:{ .lg .middle } **[Contributing](contributing.md)**
+
+    ---
+    Contribution guidelines, branching model, and release process.
 
 -   :material-book-open-variant:{ .lg .middle } **[API reference](reference/index.md)**
 
@@ -66,6 +76,6 @@ See [Schema](schema.md) for the full breakdown.
 
 - Schema, DB admin, access: **Mateusz Franciszek Kołek** —
   <mateusz.kolek@meduniwien.ac.at>
-- Co-maintainer: Gabriel Innocenti
+- Co-maintainer: **Gabriel Innocenti** — <gabriel.innocenti@meduniwien.ac.at>
 - Bugs / feature requests:
   [GitHub issues](https://github.com/Polymerase3/noxdb/issues)
