@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """Append control samples from Overview_SQRs.csv to migration_import/ CSVs.
 
-Controls (Mock, Anchor, NC, input) are absent from the per-project metadata
-files.  This script recovers them from Overview_SQRs.csv, infers their
-project from the SQR column (Mock/Anchor/NC → project looked up from the
-metadata CSVs; input → standalone project "input"), and appends the missing
-rows to the four master CSVs produced by prepare_migration.py.
+Controls (mockIP, anchor, NC, input) are absent from the per-project metadata
+files.  This script recovers them from Overview_SQRs.csv and assigns each
+control type to its own dedicated project (mockIP → project "mockIP",
+anchor → project "anchor", NC → project "NC", input → project "input").
+Controls are NOT associated with real study projects; reverse lookups to
+find which project's samples share a plate are done via SQR+SQRP at query
+time using queries.controls_for_project().
 
 Safe to re-run: already-present sample_names are silently skipped.
 
@@ -22,7 +24,13 @@ from pathlib import Path
 
 DEFAULT_LISC_ROOT = "/lisc/data/work/ccr"
 STORAGE_TIER = "work"
-INPUT_PROJECT = "input"
+
+CONTROL_PROJECTS: dict[str, str] = {
+    "mockIP": "Mock IP control samples",
+    "anchor": "Anchor control samples",
+    "NC":     "Negative control (NC) samples",
+    "input":  "Control samples (input DNA)",
+}
 
 KNOWN_LIBS: frozenset[str] = frozenset({"A", "T", "C2", "C1", "v0", "v1", "s"})
 
@@ -55,19 +63,6 @@ def _strip_sample_prefix(name: str) -> str:
     return name[7:] if name.startswith("Sample_") else name
 
 
-def _build_sqr_project_map(meta_dir: Path) -> dict[str, str]:
-    """Return {sqr: project_name} from all metadata CSVs. First mapping wins."""
-    mapping: dict[str, str] = {}
-    for meta_file in sorted(meta_dir.glob("*_metadata.csv")):
-        with meta_file.open(encoding="utf-8-sig", newline="") as fh:
-            reader = csv.DictReader(fh, delimiter=";")
-            for row in reader:
-                sqr     = (row.get("SQR")     or "").strip().zfill(2)
-                project = (row.get("project") or "").strip()
-                if sqr and project and sqr not in mapping:
-                    mapping[sqr] = project
-    return mapping
-
 
 def _read_csv_set(path: Path, *cols: str) -> set[tuple]:
     if not path.exists():
@@ -99,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
         description="Append control samples from Overview_SQRs.csv to import CSVs.",
     )
     p.add_argument("migration_dir", type=Path,
-                   help="Root of migrations/ (contains meta/ and Overview_SQRs.csv).")
+                   help="Root of migrations/ (contains Overview_SQRs.csv).")
     p.add_argument("import_dir", type=Path,
                    help="Destination folder with existing master CSVs (migration_import/).")
     p.add_argument("--lisc-root", default=DEFAULT_LISC_ROOT)
@@ -110,18 +105,10 @@ def main(argv: list[str] | None = None) -> int:
     lisc_root: str      = args.lisc_root.rstrip("/")
 
     overview_path = migration_dir / "Overview_SQRs.csv"
-    meta_dir      = migration_dir / "meta"
 
     if not overview_path.exists():
         print(f"ERROR: not found: {overview_path}", file=sys.stderr)
         return 2
-    if not meta_dir.is_dir():
-        print(f"ERROR: not found: {meta_dir}", file=sys.stderr)
-        return 2
-
-    print("Building SQR → project mapping from metadata files...")
-    sqr_project = _build_sqr_project_map(meta_dir)
-    print(f"  {len(sqr_project)} SQR entries mapped.")
 
     # Read existing state for deduplication.
     existing_samples  = {t[0] for t in _read_csv_set(import_dir / "samples.csv",  "sample_name")}
@@ -141,8 +128,7 @@ def main(argv: list[str] | None = None) -> int:
     seen_visits:   set[tuple[str, str, str]]   = set()
     seen_samples:  set[str]                    = set()
 
-    n_skipped    = 0
-    n_no_project = 0
+    n_skipped = 0
 
     print(f"Scanning {overview_path.name}...")
 
@@ -166,18 +152,10 @@ def main(argv: list[str] | None = None) -> int:
                 continue
 
             # ── Project assignment ────────────────────────────────────────
-            if sample_type == "input":
-                project = INPUT_PROJECT
-            else:
-                project = sqr_project.get(sqr)
-                if not project:
-                    print(
-                        f"  WARNING: SQR={sqr!r} has no known project "
-                        f"({sample_name!r}) — skipped",
-                        file=sys.stderr,
-                    )
-                    n_no_project += 1
-                    continue
+            # Controls are stored in their own per-type projects, not in
+            # real study projects.  Reverse lookup to find which projects
+            # ran on the same plate is done at query time via SQR+SQRP.
+            project = sample_type  # "mockIP", "anchor", "NC", or "input"
 
             # ── Deduplication ─────────────────────────────────────────────
             if sample_name in existing_samples or sample_name in seen_samples:
@@ -194,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
                 seen_projects.add(project)
                 new_projects.append({
                     "project_name": project,
-                    "description":  "Control samples (input DNA)" if project == INPUT_PROJECT else "",
+                    "description":  CONTROL_PROJECTS.get(project, ""),
                     "pi_name":      "",
                 })
 
@@ -279,9 +257,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  samples  appended : {len(new_samples)}")
     print(f"  files    appended : {len(new_files)  }")
     if n_skipped:
-        print(f"  skipped (already exist)      : {n_skipped}")
-    if n_no_project:
-        print(f"  skipped (SQR has no project) : {n_no_project}")
+        print(f"  skipped (already exist) : {n_skipped}")
     return 0
 
 
