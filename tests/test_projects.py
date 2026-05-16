@@ -166,17 +166,46 @@ def test_delete_unknown_id_returns_false(clean_projects):
         assert projects.delete(cur, 9_999_999) is False
 
 
-def test_delete_cascades_to_subjects(clean_projects):
+def test_delete_cascades_to_project_samples(clean_projects):
+    """Subjects no longer FK to projects; project membership lives in
+    project_samples. Deleting a project must drop its project_samples
+    links (ON DELETE CASCADE) while the sample/subject lineage rows —
+    which carry no project affiliation — survive."""
     with transaction() as cur:
         pid = projects.create(cur, "DCASC")
         cur.execute(
-            "INSERT INTO subjects (project_id, subject_code, sex) VALUES (?, ?, ?)",
-            (pid, "S1", "F"),
+            "INSERT INTO subjects (subject_code, sex) VALUES (?, ?)",
+            ("S1", "F"),
+        )
+        sub_id = cur.lastrowid
+        cur.execute(
+            "INSERT INTO visits (subject_id, timepoint, group_test, age) "
+            "VALUES (?, ?, ?, ?)",
+            (sub_id, "t0", "ctrl", 30),
+        )
+        vid = cur.lastrowid
+        cur.execute(
+            "INSERT INTO samples "
+            "(visit_id, sample_name, sample_type, SQR, SQRP, library) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (vid, "DCASC_S1", "sample", "Q", "Q", "libA"),
+        )
+        smid = cur.lastrowid
+        cur.execute(
+            "INSERT INTO project_samples (project_id, sample_id) VALUES (?, ?)",
+            (pid, smid),
         )
     with transaction() as cur:
         projects.delete(cur, pid)
-        cur.execute("SELECT COUNT(*) FROM subjects WHERE project_id = ?", (pid,))
+        cur.execute(
+            "SELECT COUNT(*) FROM project_samples WHERE project_id = ?", (pid,)
+        )
         assert cur.fetchone()[0] == 0
+        # Sample + subject lineage rows are NOT cascaded.
+        cur.execute("SELECT COUNT(*) FROM samples WHERE sample_id = ?", (smid,))
+        assert cur.fetchone()[0] == 1
+        cur.execute("SELECT COUNT(*) FROM subjects WHERE subject_id = ?", (sub_id,))
+        assert cur.fetchone()[0] == 1
 
 
 # --------------------------------------------------------------------------- #

@@ -15,8 +15,8 @@ def two_visits(_init_pool):
     """Two visits under one subject. Cleanup wipes everything via cascade."""
     with transaction() as cur:
         wipe_all(cur)
-        pid = projects.create(cur, "SPROJ")
-        sid = subjects.create(cur, pid, "S1", "F")
+        projects.create(cur, "SPROJ")
+        sid = subjects.create(cur, "S1", "F")
         v1 = visits.create(cur, sid, "control", 30, timepoint="baseline")
         v2 = visits.create(cur, sid, "control", 31, timepoint="m3")
     yield v1, v2
@@ -44,6 +44,40 @@ def test_create_returns_new_id_and_persists(two_visits):
     assert row["SQRP"] == "SQRP1"
     assert row["library"] == "libA"
     assert row["antibody_class"] == "IgG"
+
+
+def test_create_canonicalizes_sqr_sqrp(two_visits):
+    """Whitespace is stripped; NA/empty SQRP collapses to '' so
+    SQR+SQRP plate matching never drifts. Padding is preserved."""
+    v1, _ = two_visits
+    with transaction() as cur:
+        sid = samples.create(
+            cur, v1, "CANON1", "sample", "  01 ", "NA", "libA",
+        )
+        row = samples.get(cur, sid)
+    assert row["SQR"] == "01"
+    assert row["SQRP"] == ""
+
+
+def test_create_canonicalizes_na_sqr(two_visits):
+    v1, _ = two_visits
+    with transaction() as cur:
+        sid = samples.create(
+            cur, v1, "CANON2", "sample", "n/a", "", "libA",
+        )
+        row = samples.get(cur, sid)
+    assert row["SQR"] == ""
+    assert row["SQRP"] == ""
+
+
+def test_update_canonicalizes_sqr(two_visits):
+    v1, _ = two_visits
+    with transaction() as cur:
+        sid = samples.create(cur, v1, "CANON3", "sample", "05", "06", "libA")
+        samples.update(cur, sid, sqr=" 07 ", sqrp="N/A")
+        row = samples.get(cur, sid)
+    assert row["SQR"] == "07"
+    assert row["SQRP"] == ""
 
 
 def test_create_allows_null_antibody_class(two_visits):

@@ -202,8 +202,8 @@ def parent_ids(_init_pool):
     """One project / subject / visit / sample for sample_files to attach to."""
     with transaction() as cur:
         wipe_all(cur)
-        pid = projects.create(cur, "FPROJ")
-        sid = subjects.create(cur, pid, "S1", "F")
+        projects.create(cur, "FPROJ")
+        sid = subjects.create(cur, "S1", "F")
         vid = visits.create(cur, sid, "control", 30, timepoint="baseline")
         smp = samples.create(cur, vid, "SMP1", "sample", "SQR1", "SQRP1", "libA")
     yield smp

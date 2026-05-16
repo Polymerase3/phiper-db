@@ -139,7 +139,11 @@ def test_happy_path_import(tmp_path, clean_db, fake_tier_roots):
     assert report.counts["metadata"]["inserted"] == 12
 
     rows = execute(
-        "SELECT COUNT(*) AS n FROM subjects WHERE project_id = ?",
+        "SELECT COUNT(*) AS n FROM subjects WHERE subject_id IN ("
+        " SELECT v.subject_id FROM project_samples ps"
+        " JOIN samples sm ON sm.sample_id = ps.sample_id"
+        " JOIN visits v ON v.visit_id = sm.visit_id"
+        " WHERE ps.project_id = ?)",
         (report.project_id,),
     )
     assert rows[0]["n"] == 2
@@ -262,14 +266,19 @@ def test_skip_disk_check_lets_dry_run_succeed(
     assert report.dry_run is True
 
 
-def test_sample_name_collides_with_other_project(
+def test_sample_name_shared_across_projects_is_linked(
     tmp_path, clean_db, fake_tier_roots,
 ):
-    """Same sample_name in two different projects is blocked even with --force."""
-    proj_a = _build_project(tmp_path, name="COLL_A", prefix="CA")
-    import_project_from_dir(proj_a, log_dir=tmp_path / "logs")
+    """Re-using a sample_name across projects is allowed by design.
 
-    # Build a separate project that re-uses one of COLL_A's sample_names.
+    Under the cross-project samples model the existing sample is re-used
+    (not duplicated) and linked to the new project via project_samples —
+    so one physical sample can belong to several projects.
+    """
+    proj_a = _build_project(tmp_path, name="COLL_A", prefix="CA")
+    report_a = import_project_from_dir(proj_a, log_dir=tmp_path / "logs")
+
+    # A separate project that re-uses one of COLL_A's sample_names.
     proj_b = tmp_path / "coll_b"
     proj_b.mkdir()
     (proj_b / "project.yaml").write_text(PROJECT_YAML.format(name="COLL_B"))
@@ -281,18 +290,27 @@ def test_sample_name_collides_with_other_project(
     )
     (proj_b / "samples.csv").write_text(
         "sample_name,subject_code,timepoint,sample_type,sqr,sqrp,library\n"
-        # CA_SA1 already lives in project COLL_A.
+        # CA_SA1 already lives in project COLL_A — sharing is allowed now.
         "CA_SA1,S_X,t0,sample,Q,Q,libA\n"
     )
     (proj_b / "files").mkdir()
     (proj_b / "files" / "manifest.csv").write_text(
         "sample_name,file_path,file_type\n"
     )
-    with pytest.raises(ProjectImportError) as exc:
-        import_project_from_dir(
-            proj_b, force=True, log_dir=tmp_path / "logs",
-        )
-    assert any("already belongs to project_id" in e for e in exc.value.errors)
+    report_b = import_project_from_dir(
+        proj_b, force=True, log_dir=tmp_path / "logs",
+    )
+    assert report_b.errors == []
+
+    # CA_SA1 is one physical sample linked to BOTH projects.
+    rows = execute(
+        "SELECT ps.project_id FROM project_samples ps "
+        "JOIN samples sm ON sm.sample_id = ps.sample_id "
+        "WHERE sm.sample_name = ?",
+        ("CA_SA1",),
+    )
+    linked = {r["project_id"] for r in rows}
+    assert linked == {report_a.project_id, report_b.project_id}
 
 
 def test_missing_required_file(tmp_path, clean_db):

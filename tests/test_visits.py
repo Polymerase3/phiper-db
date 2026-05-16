@@ -15,9 +15,9 @@ def two_subjects(_init_pool):
     """Two subjects under one project. Cleanup wipes everything via cascade."""
     with transaction() as cur:
         wipe_all(cur)
-        pid = projects.create(cur, "VPROJ")
-        s1 = subjects.create(cur, pid, "S1", "F")
-        s2 = subjects.create(cur, pid, "S2", "M")
+        projects.create(cur, "VPROJ")
+        s1 = subjects.create(cur, "S1", "F")
+        s2 = subjects.create(cur, "S2", "M")
     yield s1, s2
     with transaction() as cur:
         wipe_all(cur)
