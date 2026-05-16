@@ -1,0 +1,16 @@
+/* Small brand tweaks for the noxdb docs. */
+
+/* Tighten code blocks a touch */
+.md-typeset pre > code {
+  font-size: 0.78rem;
+}
+
+/* Make the auto-generated API reference signatures wrap nicely */
+.doc-signature {
+  white-space: pre-wrap;
+}
+
+/* Slightly subtler table borders */
+.md-typeset table:not([class]) th {
+  background-color: var(--md-default-fg-color--lightest);
+}

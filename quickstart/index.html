@@ -1,0 +1,2525 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Schema, migrations, and Python tooling for the lab's MariaDB metadata database.">
+      
+      
+      
+        <link rel="canonical" href="https://polymerase3.github.io/noxdb/quickstart/">
+      
+      
+        <link rel="prev" href="../install/">
+      
+      
+        <link rel="next" href="../data-preparation/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Quickstart - noxDB</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#quickstart" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="noxDB" class="md-header__button md-logo" aria-label="noxDB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            noxDB
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Quickstart
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Polymerase3/noxdb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Polymerase3/noxdb
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../install/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../data-preparation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Preparing data
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../schema/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Schema
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../testing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Testing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="noxDB" class="md-nav__button md-logo" aria-label="noxDB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    noxDB
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Polymerase3/noxdb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Polymerase3/noxdb
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-connecting-to-the-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Connecting to the database
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Connecting to the database">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-on-site-vpn-direct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A — On-site / VPN (direct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-remote-ssh-tunnel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B — Remote (SSH tunnel)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option B — Remote (SSH tunnel)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-add-local_port-to-mycnf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Add local_port to ~/.my.cnf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-open-the-tunnel-once-per-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Open the tunnel (once per session)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-verify-the-tunnel-is-alive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Verify the tunnel is alive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-connect-from-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Connect from Python
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#killing-the-tunnel-when-you-are-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Killing the tunnel when you are done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-listing-all-projects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Listing all projects
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-project-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Project summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-samples-for-a-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Samples for a project
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Samples for a project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-samples-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real samples only
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtering-by-file-presence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering by file presence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-subjects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Subjects
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-visits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Visits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-sample-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Sample detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-samples-with-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Samples with metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-files-for-a-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Files for a project
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-project-tidy-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Project tidy table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-plate-controls-for-a-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Plate controls for a project
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Plate controls for a project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filtering-by-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering by type
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-input-samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Input samples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-shut-down" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Shut down
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-full-fetch-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Full fetch example
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. Full fetch example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-structure-and-file-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project structure and file manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exporting-to-a-local-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exporting to a local folder
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-go-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where to go next
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-preparation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparing data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/connection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    connection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/projects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    projects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/subjects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subjects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/visits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    visits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/samples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    samples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/files/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fetch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fetch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/import/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project import
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-connecting-to-the-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Connecting to the database
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Connecting to the database">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-on-site-vpn-direct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A — On-site / VPN (direct)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-remote-ssh-tunnel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B — Remote (SSH tunnel)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option B — Remote (SSH tunnel)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-add-local_port-to-mycnf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Add local_port to ~/.my.cnf
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-open-the-tunnel-once-per-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Open the tunnel (once per session)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-verify-the-tunnel-is-alive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Verify the tunnel is alive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-connect-from-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Connect from Python
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#killing-the-tunnel-when-you-are-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Killing the tunnel when you are done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-listing-all-projects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Listing all projects
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-project-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Project summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-samples-for-a-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Samples for a project
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Samples for a project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-samples-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real samples only
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtering-by-file-presence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering by file presence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-subjects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Subjects
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-visits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Visits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-sample-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Sample detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-samples-with-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Samples with metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-files-for-a-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Files for a project
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-project-tidy-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Project tidy table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-plate-controls-for-a-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Plate controls for a project
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Plate controls for a project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filtering-by-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering by type
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-input-samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Input samples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-shut-down" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Shut down
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-full-fetch-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Full fetch example
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. Full fetch example">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-structure-and-file-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project structure and file manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exporting-to-a-local-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exporting to a local folder
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-go-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where to go next
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Polymerase3/noxdb/edit/main/docs/quickstart.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="quickstart">Quickstart<a class="headerlink" href="#quickstart" title="Permanent link">&para;</a></h1>
+<p>This guide is for <strong>read-only users</strong> — researchers who want to query the
+database, explore projects, and pull data into pandas. It assumes you have
+already <a href="../install/">installed the package</a> and configured <code>~/.my.cnf</code>.</p>
+<hr />
+<h2 id="1-connecting-to-the-database">1. Connecting to the database<a class="headerlink" href="#1-connecting-to-the-database" title="Permanent link">&para;</a></h2>
+<p>The CCR database lives inside the LiSC network and is only reachable directly
+when you are on-site or on the VPN. From outside, you must tunnel through the
+SSH gateway first.</p>
+<blockquote>
+<p><strong>⚠ Prefer Option B (SSH tunnel) when working remotely.</strong></p>
+<p>Option A makes a direct TCP connection to the database host on every
+<code>init_pool()</code> call. Opening and closing that connection repeatedly from
+outside the LiSC network will trigger <strong>fail2ban</strong> on the SSH gateway and
+get your IP temporarily banned. Always use Option B and keep the tunnel
+open for your entire session — it opens once and stays alive.</p>
+</blockquote>
+<h3 id="option-a-on-site-vpn-direct">Option A — On-site / VPN (direct)<a class="headerlink" href="#option-a-on-site-vpn-direct" title="Permanent link">&para;</a></h3>
+<p><code>init_pool()</code> connects straight to the DB host configured in <code>~/.my.cnf</code>.
+Nothing else is needed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_pool</span><span class="p">,</span> <span class="n">close_pool</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">init_pool</span><span class="p">()</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># ... your queries ...</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">close_pool</span><span class="p">()</span>
+</code></pre></div>
+<h3 id="option-b-remote-ssh-tunnel">Option B — Remote (SSH tunnel)<a class="headerlink" href="#option-b-remote-ssh-tunnel" title="Permanent link">&para;</a></h3>
+<p>The database is not directly reachable from outside LiSC. You need to open a
+local port-forwarding tunnel through the SSH gateway first, then tell
+<code>init_pool()</code> to connect through it.</p>
+<h4 id="step-1-add-local_port-to-mycnf">Step 1 — Add <code>local_port</code> to <code>~/.my.cnf</code><a class="headerlink" href="#step-1-add-local_port-to-mycnf" title="Permanent link">&para;</a></h4>
+<p>In the <code>[noxdb-ssh]</code> section, add the local port the tunnel will bind to:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[noxdb-ssh]</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="na">ssh_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ccr-lab.lisc.univie.ac.at</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="na">ssh_user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">youruser</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="na">local_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">3307</span>
+</code></pre></div>
+<p>This is how <code>init_pool()</code> knows which port to look for.</p>
+<h4 id="step-2-open-the-tunnel-once-per-session">Step 2 — Open the tunnel (once per session)<a class="headerlink" href="#step-2-open-the-tunnel-once-per-session" title="Permanent link">&para;</a></h4>
+<p>Run this in your terminal before starting any Python session:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ssh<span class="w"> </span>-f<span class="w"> </span>-N<span class="w"> </span>-L<span class="w"> </span><span class="m">3307</span>:&lt;host&gt;:3306<span class="w"> </span>youruser@ccr-lab.lisc.univie.ac.at
+</code></pre></div>
+<p>Replace <code>&lt;host&gt;</code> with the value of <code>host</code> from the <code>[noxdb]</code> section of your
+<code>~/.my.cnf</code>. The <code>-f</code> flag backgrounds the process; <code>-N</code> means no remote
+command is run — the tunnel just stays open.</p>
+<h4 id="step-3-verify-the-tunnel-is-alive">Step 3 — Verify the tunnel is alive<a class="headerlink" href="#step-3-verify-the-tunnel-is-alive" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ss<span class="w"> </span>-tlnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="m">3307</span>
+</code></pre></div>
+<p>You should see a line like:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>LISTEN  0  128  127.0.0.1:3307  0.0.0.0:*
+</code></pre></div>
+<p>If the output is empty, the tunnel is not running. Re-run the <code>ssh</code> command.</p>
+<h4 id="step-4-connect-from-python">Step 4 — Connect from Python<a class="headerlink" href="#step-4-connect-from-python" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_pool</span><span class="p">,</span> <span class="n">close_pool</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">init_pool</span><span class="p">()</span>   <span class="c1"># detects 127.0.0.1:3307 is listening and connects through it</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># ... your queries ...</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">close_pool</span><span class="p">()</span>
+</code></pre></div>
+<p><code>init_pool()</code> checks whether <code>local_port</code> (3307) is already bound. If it is,
+it connects through the existing tunnel without opening a new one. If it is
+not, it raises an error — which is intentional: you should always start the
+tunnel explicitly so you know it is running.</p>
+<h4 id="killing-the-tunnel-when-you-are-done">Killing the tunnel when you are done<a class="headerlink" href="#killing-the-tunnel-when-you-are-done" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>pkill<span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;L 3307:&lt;host&gt;:3306&quot;</span>
+</code></pre></div>
+<hr />
+<h2 id="2-listing-all-projects">2. Listing all projects<a class="headerlink" href="#2-listing-all-projects" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">projects</span><span class="p">,</span> <span class="n">transaction</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">proj_list</span> <span class="o">=</span> <span class="n">projects</span><span class="o">.</span><span class="n">list_all</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>project_id</th>
+<th>project_name</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7</td>
+<td>ADMCI_NED</td>
+<td></td>
+</tr>
+<tr>
+<td>10</td>
+<td>BAT_BATIOS_Kiefer</td>
+<td>BAT (n=62) + BATIOS (n=74), 136 serum samples</td>
+</tr>
+<tr>
+<td>13</td>
+<td>BC-Engl</td>
+<td>bladder cancer: Cis (n=141), Carbo (n=47), RCE (n=126), ICI (n=79), …</td>
+</tr>
+<tr>
+<td>19</td>
+<td>CRC_radiotherapy</td>
+<td>diff. timepoints, 320 samples</td>
+</tr>
+<tr>
+<td>25</td>
+<td>HCC_MUW</td>
+<td>150 + 30 (TKI therapy) + 78 HCs + 48 TKI-treated</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>58</td>
+<td>input</td>
+<td>Control samples (input DNA)</td>
+</tr>
+</tbody>
+</table>
+<p>18 projects total — 17 study projects + the <code>input</code> umbrella project.
+The dedicated <code>mockIP</code> / <code>anchor</code> / <code>NC</code> projects were removed in
+migration <code>003</code>; those controls are now linked to the study projects
+that share their plate (see <a href="#11-plate-controls-for-a-project">§11</a>).</p>
+<hr />
+<h2 id="3-project-summary">3. Project summary<a class="headerlink" href="#3-project-summary" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">queries</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">summary</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">project_summary</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">&quot;project_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nt">&quot;n_subjects&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span><span class="p">,</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nt">&quot;n_visits&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span><span class="p">,</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="nt">&quot;n_samples&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span><span class="p">,</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="nt">&quot;n_files&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">348</span><span class="p">,</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">  </span><span class="nt">&quot;files_by_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">    </span><span class="nt">&quot;counts&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span><span class="p">,</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">    </span><span class="nt">&quot;zigp_norm&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">  </span><span class="nt">&quot;n_controls&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">64</span><span class="p">,</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">  </span><span class="nt">&quot;controls_by_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">    </span><span class="nt">&quot;mockIP&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">    </span><span class="nt">&quot;anchor&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="w">    </span><span class="nt">&quot;NC&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>n_samples</code> counts <strong>every</strong> sample linked to the project via
+<code>project_samples</code>, controls included — here 110 study + 64 controls =
+174. <code>n_controls</code> / <code>controls_by_type</code> break out just the control
+subset (matched onto the project's plates by SQR + SQRP at import /
+migration time).</p>
+<hr />
+<h2 id="4-samples-for-a-project">4. Samples for a project<a class="headerlink" href="#4-samples-for-a-project" title="Permanent link">&para;</a></h2>
+<p>The main query for pulling all samples belonging to a project. Real
+samples and their plate controls (mockIP, anchor, NC) are all project
+members via <code>project_samples</code>, returned in one flat <code>DataFrame</code>. The
+<code>project_id</code> column is always the queried project (<code>7</code> for every row,
+controls included) — tell rows apart by <code>sample_type</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">samples_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>project_id</th>
+<th>subject_id</th>
+<th>subject_code</th>
+<th>visit_id</th>
+<th>timepoint</th>
+<th>sample_id</th>
+<th>sample_name</th>
+<th>sample_type</th>
+<th>SQR</th>
+<th>SQRP</th>
+<th>library</th>
+<th>antibody_class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7</td>
+<td>649</td>
+<td>R14P02_77_FAU0001_ADMCI_NED_A_T_C2</td>
+<td>649</td>
+<td>baseline</td>
+<td>649</td>
+<td>R14P02_77_FAU0001_ADMCI_NED_A_T_C2</td>
+<td>sample</td>
+<td>07</td>
+<td>02</td>
+<td>A_T_C2</td>
+<td>None</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>7</td>
+<td>14926</td>
+<td>R14P02_81_Mock_1_A_T_C2</td>
+<td>15838</td>
+<td>baseline</td>
+<td>15838</td>
+<td>R14P02_81_Mock_1_A_T_C2</td>
+<td>mockIP</td>
+<td>07</td>
+<td>02</td>
+<td>A_T_C2</td>
+<td>None</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p>174 rows total (110 <code>sample</code> + 32 <code>mockIP</code> + 16 <code>anchor</code> + 16 <code>NC</code>).</p>
+<h3 id="real-samples-only">Real samples only<a class="headerlink" href="#real-samples-only" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">samples_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">include_controls</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<p>110 rows.</p>
+<h3 id="filtering-by-file-presence">Filtering by file presence<a class="headerlink" href="#filtering-by-file-presence" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">df_with</span>    <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">samples_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">has_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">df_without</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">samples_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">has_files</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+<p>174 with files, 0 without (file filter applies to both real samples and controls).</p>
+<hr />
+<h2 id="5-subjects">5. Subjects<a class="headerlink" href="#5-subjects" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">subjects</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">subj_list</span> <span class="o">=</span> <span class="n">subjects</span><span class="o">.</span><span class="n">list_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">&quot;subject_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">649</span><span class="p">,</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="nt">&quot;subject_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;R14P02_77_FAU0001_ADMCI_NED_A_T_C2&quot;</span><span class="p">,</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nt">&quot;sex&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;F&quot;</span><span class="p">,</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span><span class="nt">&quot;origin&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Netherlands&quot;</span><span class="p">,</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-05-14T12:27:07&quot;</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="p">}</span>
+</code></pre></div>
+<p>174 subjects. <code>subjects</code> no longer carries a <code>project_id</code> (dropped in
+migration <code>003</code>); <code>list_for_project</code> now traverses
+<code>project_samples → samples → visits → subjects</code>, so every subject with
+a sample in the project — control subjects included — is returned.</p>
+<hr />
+<h2 id="6-visits">6. Visits<a class="headerlink" href="#6-visits" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM visits WHERE subject_id = ? LIMIT 1&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">649</span><span class="p">,))</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">{</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nt">&quot;visit_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">649</span><span class="p">,</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="nt">&quot;subject_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">649</span><span class="p">,</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span><span class="nt">&quot;timepoint&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;baseline&quot;</span><span class="p">,</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">  </span><span class="nt">&quot;group_test&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Controls&quot;</span><span class="p">,</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">  </span><span class="nt">&quot;age&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">83</span><span class="p">,</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-05-14T12:27:13&quot;</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="7-sample-detail">7. Sample detail<a class="headerlink" href="#7-sample-detail" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">samples</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>    <span class="n">s</span> <span class="o">=</span> <span class="n">samples</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">sample_id</span><span class="o">=</span><span class="mi">649</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="p">{</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="nt">&quot;sample_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">649</span><span class="p">,</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="nt">&quot;visit_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">649</span><span class="p">,</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span><span class="nt">&quot;sample_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;R14P02_77_FAU0001_ADMCI_NED_A_T_C2&quot;</span><span class="p">,</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span><span class="nt">&quot;sample_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sample&quot;</span><span class="p">,</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">  </span><span class="nt">&quot;SQR&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;07&quot;</span><span class="p">,</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span><span class="nt">&quot;SQRP&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;02&quot;</span><span class="p">,</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">  </span><span class="nt">&quot;library&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;A_T_C2&quot;</span><span class="p">,</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">  </span><span class="nt">&quot;antibody_class&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-05-14T12:27:18&quot;</span>
+<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h2 id="8-samples-with-metadata">8. Samples with metadata<a class="headerlink" href="#8-samples-with-metadata" title="Permanent link">&para;</a></h2>
+<p>Equivalent to <code>samples_for_project</code> but includes all EAV metadata columns
+joined in. Includes controls by default.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>    <span class="n">dfm</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">samples_with_metadata</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</code></pre></div>
+<p>174 rows × 12 columns.</p>
+<hr />
+<h2 id="9-files-for-a-project">9. Files for a project<a class="headerlink" href="#9-files-for-a-project" title="Permanent link">&para;</a></h2>
+<p>Returns every file registered for samples linked to the project —
+study samples <strong>and</strong> controls, since both are project members via
+<code>project_samples</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>    <span class="n">dff</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">files_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>file_id</th>
+<th>sample_id</th>
+<th>sample_name</th>
+<th>subject_code</th>
+<th>timepoint</th>
+<th>file_type</th>
+<th>file_path</th>
+<th>file_size_bytes</th>
+<th>checksum_md5</th>
+<th>storage_tier</th>
+<th>created_at</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>226</td>
+<td>649</td>
+<td>R14P02_77_FAU0001_ADMCI_NED_A_T_C2</td>
+<td>R14P02_77_FAU0001_ADMCI_NED_A_T_C2</td>
+<td>baseline</td>
+<td>counts</td>
+<td>/lisc/data/work/ccr/counts/R14P02_77_FAU0001_ADMCI_NED_A_T_C2.count.gz</td>
+<td>None</td>
+<td>None</td>
+<td>work</td>
+<td>2026-05-14 12:27:23</td>
+</tr>
+<tr>
+<td>229</td>
+<td>649</td>
+<td>R14P02_77_FAU0001_ADMCI_NED_A_T_C2</td>
+<td>R14P02_77_FAU0001_ADMCI_NED_A_T_C2</td>
+<td>baseline</td>
+<td>zigp_norm</td>
+<td>/lisc/data/work/ccr/zigp/R14P02_77_FAU0001_ADMCI_NED_A_T_C2.csv</td>
+<td>None</td>
+<td>None</td>
+<td>work</td>
+<td>2026-05-14 12:27:24</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p>348 files total (174 <code>counts</code> + 174 <code>zigp_norm</code>).</p>
+<hr />
+<h2 id="10-project-tidy-table">10. Project tidy table<a class="headerlink" href="#10-project-tidy-table" title="Permanent link">&para;</a></h2>
+<p>A single wide DataFrame: the <code>subject → visit → sample</code> lineage joined
+to project membership (<code>project_samples</code>) with metadata pivoted into
+columns. Includes controls. The standard starting point for downstream
+analysis:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>    <span class="n">dft</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">project_tidy_table</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</code></pre></div>
+<p>Shape: 174 rows × 12 columns.</p>
+<hr />
+<h2 id="11-plate-controls-for-a-project">11. Plate controls for a project<a class="headerlink" href="#11-plate-controls-for-a-project" title="Permanent link">&para;</a></h2>
+<p>Controls (mockIP, anchor, NC) have no project of their own — they are
+linked to every study project sharing their plate through
+<code>project_samples</code> (done at import / migration time, matched by
+SQR + SQRP). Because a plate can span multiple projects the same
+control appears for several projects: one underlying row, many
+membership links. The <code>project_id</code> column is therefore the queried
+project.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>    <span class="n">dfc</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">controls_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>sample_type
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>NC        16
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>anchor    16
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>mockIP    32
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>sample_id</th>
+<th>sample_name</th>
+<th>sample_type</th>
+<th>SQR</th>
+<th>SQRP</th>
+<th>library</th>
+<th>project_id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>15838</td>
+<td>R14P02_81_Mock_1_A_T_C2</td>
+<td>mockIP</td>
+<td>07</td>
+<td>02</td>
+<td>A_T_C2</td>
+<td>7</td>
+</tr>
+<tr>
+<td>15841</td>
+<td>R14P02_82_Mock_2_A_T_C2</td>
+<td>mockIP</td>
+<td>07</td>
+<td>02</td>
+<td>A_T_C2</td>
+<td>7</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p>64 controls total (32 <code>mockIP</code> + 16 <code>anchor</code> + 16 <code>NC</code>).</p>
+<h3 id="filtering-by-type">Filtering by type<a class="headerlink" href="#filtering-by-type" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>    <span class="n">mocks</span>   <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">controls_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">sample_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mockIP&quot;</span><span class="p">])</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>    <span class="n">anchors</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">controls_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">sample_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;anchor&quot;</span><span class="p">])</span>
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    <span class="n">qc</span>      <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">controls_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">sample_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;anchor&quot;</span><span class="p">,</span> <span class="s2">&quot;NC&quot;</span><span class="p">])</span>
+</code></pre></div>
+<hr />
+<h2 id="12-input-samples">12. Input samples<a class="headerlink" href="#12-input-samples" title="Permanent link">&para;</a></h2>
+<p>Input DNA samples are not associated with any study project. Use
+<code>list_inputs()</code> to retrieve all of them globally:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>    <span class="n">dfi</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">list_inputs</span><span class="p">(</span><span class="n">cur</span><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>sample_id</th>
+<th>sample_name</th>
+<th>sample_type</th>
+<th>SQR</th>
+<th>SQRP</th>
+<th>library</th>
+<th>project_id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>15616</td>
+<td>R01P02_1_input_A_v0_s</td>
+<td>input</td>
+<td>01</td>
+<td></td>
+<td>A_v0_s</td>
+<td>58</td>
+</tr>
+<tr>
+<td>15619</td>
+<td>R01P02_2_input_A_v0_s</td>
+<td>input</td>
+<td>01</td>
+<td></td>
+<td>A_v0_s</td>
+<td>58</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p>56 input rows total.</p>
+<hr />
+<h2 id="13-shut-down">13. Shut down<a class="headerlink" href="#13-shut-down" title="Permanent link">&para;</a></h2>
+<p>Always close the pool when you are done:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="n">close_pool</span><span class="p">()</span>
+</code></pre></div>
+<p>In scripts, use a <code>try/finally</code> to guarantee cleanup even if a query fails:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>    <span class="n">init_pool</span><span class="p">()</span>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">samples_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="k">finally</span><span class="p">:</span>
+<a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>    <span class="n">close_pool</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<h2 id="14-full-fetch-example">14. Full fetch example<a class="headerlink" href="#14-full-fetch-example" title="Permanent link">&para;</a></h2>
+<p>The <code>fetch</code> module is the consumer side of noxdb: given a project, it
+materialises the project structure, a tidy metadata table, and — when running
+on LiSC or through an SFTP jump host — the actual files.</p>
+<h3 id="project-structure-and-file-manifest">Project structure and file manifest<a class="headerlink" href="#project-structure-and-file-manifest" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_pool</span><span class="p">,</span> <span class="n">close_pool</span><span class="p">,</span> <span class="n">transaction</span>
+<a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">projects</span><span class="p">,</span> <span class="n">queries</span>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+<a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>    <span class="n">init_pool</span><span class="p">()</span>
+<a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>        <span class="n">project_row</span> <span class="o">=</span> <span class="n">projects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+<a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>        <span class="n">summary</span>     <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">project_summary</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+<a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>        <span class="n">dff</span>         <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">files_for_project</span><span class="p">(</span><span class="n">cur</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+<a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="k">finally</span><span class="p">:</span>
+<a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>    <span class="n">close_pool</span><span class="p">()</span>
+</code></pre></div>
+<p><code>project_row</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="p">{</span>
+<a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="w">  </span><span class="nt">&quot;project_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">  </span><span class="nt">&quot;project_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ADMCI_NED&quot;</span><span class="p">,</span>
+<a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="w">  </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="w">  </span><span class="nt">&quot;pi_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Arno Bourgonje&quot;</span><span class="p">,</span>
+<a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="w">  </span><span class="nt">&quot;created_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-05-14T12:27:07&quot;</span>
+<a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>summary</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="p">{</span>
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">  </span><span class="nt">&quot;project_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">  </span><span class="nt">&quot;n_subjects&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span><span class="p">,</span>
+<a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">  </span><span class="nt">&quot;n_visits&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span><span class="p">,</span>
+<a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="w">  </span><span class="nt">&quot;n_samples&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span><span class="p">,</span>
+<a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="w">  </span><span class="nt">&quot;n_files&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">348</span><span class="p">,</span>
+<a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="w">  </span><span class="nt">&quot;files_by_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a><span class="w">    </span><span class="nt">&quot;counts&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span><span class="p">,</span>
+<a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="w">    </span><span class="nt">&quot;zigp_norm&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span>
+<a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a><span class="w">  </span><span class="nt">&quot;n_controls&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">64</span><span class="p">,</span>
+<a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a><span class="w">  </span><span class="nt">&quot;controls_by_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a><span class="w">    </span><span class="nt">&quot;mockIP&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span>
+<a id="__codelineno-30-14" name="__codelineno-30-14" href="#__codelineno-30-14"></a><span class="w">    </span><span class="nt">&quot;anchor&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
+<a id="__codelineno-30-15" name="__codelineno-30-15" href="#__codelineno-30-15"></a><span class="w">    </span><span class="nt">&quot;NC&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span>
+<a id="__codelineno-30-16" name="__codelineno-30-16" href="#__codelineno-30-16"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-30-17" name="__codelineno-30-17" href="#__codelineno-30-17"></a><span class="p">}</span>
+</code></pre></div>
+<p><code>dff</code> — first 6 rows of 348:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a> file_id                        sample_name file_type                                                              file_path storage_tier
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>     226 R14P02_77_FAU0001_ADMCI_NED_A_T_C2    counts /lisc/data/work/ccr/counts/R14P02_77_FAU0001_ADMCI_NED_A_T_C2.count.gz         work
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>     229 R14P02_77_FAU0001_ADMCI_NED_A_T_C2 zigp_norm        /lisc/data/work/ccr/zigp/R14P02_77_FAU0001_ADMCI_NED_A_T_C2.csv         work
+<a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>     232 R14P02_74_FAU0002_ADMCI_NED_A_T_C2    counts /lisc/data/work/ccr/counts/R14P02_74_FAU0002_ADMCI_NED_A_T_C2.count.gz         work
+<a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>     235 R14P02_74_FAU0002_ADMCI_NED_A_T_C2 zigp_norm        /lisc/data/work/ccr/zigp/R14P02_74_FAU0002_ADMCI_NED_A_T_C2.csv         work
+<a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>     238  R19P04_14_MG0213_ADMCI_NED_A_T_C2    counts  /lisc/data/work/ccr/counts/R19P04_14_MG0213_ADMCI_NED_A_T_C2.count.gz         work
+<a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a>     241  R19P04_14_MG0213_ADMCI_NED_A_T_C2 zigp_norm         /lisc/data/work/ccr/zigp/R19P04_14_MG0213_ADMCI_NED_A_T_C2.csv         work
+</code></pre></div>
+<h3 id="exporting-to-a-local-folder">Exporting to a local folder<a class="headerlink" href="#exporting-to-a-local-folder" title="Permanent link">&para;</a></h3>
+<p><code>fetch.export_project</code> combines metadata, a README, and (optionally) the
+actual files into a single output directory. Pass <code>include_files=False</code> to
+get just the metadata and README without downloading:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_pool</span><span class="p">,</span> <span class="n">close_pool</span><span class="p">,</span> <span class="n">transaction</span>
+<a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">noxdb</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch</span>
+<a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
+<a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>    <span class="n">init_pool</span><span class="p">()</span>
+<a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a>    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">cur</span><span class="p">:</span>
+<a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">fetch</span><span class="o">.</span><span class="n">export_project</span><span class="p">(</span>
+<a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a>            <span class="n">cur</span><span class="p">,</span>
+<a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a>            <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+<a id="__codelineno-32-10" name="__codelineno-32-10" href="#__codelineno-32-10"></a>            <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;exports/ADMCI_NED&quot;</span><span class="p">,</span>
+<a id="__codelineno-32-11" name="__codelineno-32-11" href="#__codelineno-32-11"></a>            <span class="n">include_files</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>          <span class="c1"># set True on LiSC to also pull files</span>
+<a id="__codelineno-32-12" name="__codelineno-32-12" href="#__codelineno-32-12"></a>            <span class="n">metadata_formats</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;csv&quot;</span><span class="p">,),</span>
+<a id="__codelineno-32-13" name="__codelineno-32-13" href="#__codelineno-32-13"></a>        <span class="p">)</span>
+<a id="__codelineno-32-14" name="__codelineno-32-14" href="#__codelineno-32-14"></a><span class="k">finally</span><span class="p">:</span>
+<a id="__codelineno-32-15" name="__codelineno-32-15" href="#__codelineno-32-15"></a>    <span class="n">close_pool</span><span class="p">()</span>
+</code></pre></div>
+<p>Output directory layout:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>exports/ADMCI_NED/
+<a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>├── README.txt     (209 bytes)
+<a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>└── metadata.csv   (18,828 bytes)
+</code></pre></div>
+<p><code>README.txt</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>Project: ADMCI_NED (id=7)
+<a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>PI: Arno Bourgonje
+<a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>Description: -
+<a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a>Created: 2026-05-14 12:27:07
+<a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a>
+<a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a>Counts:
+<a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a>  subjects: 174
+<a id="__codelineno-34-8" name="__codelineno-34-8" href="#__codelineno-34-8"></a>  visits:   174
+<a id="__codelineno-34-9" name="__codelineno-34-9" href="#__codelineno-34-9"></a>  samples:  174
+<a id="__codelineno-34-10" name="__codelineno-34-10" href="#__codelineno-34-10"></a>  files:    348
+<a id="__codelineno-34-11" name="__codelineno-34-11" href="#__codelineno-34-11"></a>
+<a id="__codelineno-34-12" name="__codelineno-34-12" href="#__codelineno-34-12"></a>Files by type:
+<a id="__codelineno-34-13" name="__codelineno-34-13" href="#__codelineno-34-13"></a>  counts: 174
+<a id="__codelineno-34-14" name="__codelineno-34-14" href="#__codelineno-34-14"></a>  zigp_norm: 174
+</code></pre></div>
+<p><code>result</code> (the return value):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="p">{</span>
+<a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a><span class="w">  </span><span class="nt">&quot;project&quot;</span><span class="p">:</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;project_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;project_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ADMCI_NED&quot;</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a><span class="w">  </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;n_subjects&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">174</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;n_files&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">348</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a><span class="w">  </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;csv&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;exports/ADMCI_NED/metadata.csv&quot;</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a><span class="w">  </span><span class="nt">&quot;readme&quot;</span><span class="p">:</span><span class="w">   </span><span class="s2">&quot;exports/ADMCI_NED/README.txt&quot;</span><span class="p">,</span>
+<a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a><span class="w">  </span><span class="nt">&quot;output_dir&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;exports/ADMCI_NED&quot;</span>
+<a id="__codelineno-35-7" name="__codelineno-35-7" href="#__codelineno-35-7"></a><span class="p">}</span>
+</code></pre></div>
+<p>To also download the actual files (requires running on LiSC or an active SFTP
+connection through the SSH gateway):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">fetch</span><span class="o">.</span><span class="n">export_project</span><span class="p">(</span>
+<a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>    <span class="n">cur</span><span class="p">,</span>
+<a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>    <span class="n">project_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+<a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>    <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;exports/ADMCI_NED&quot;</span><span class="p">,</span>
+<a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a>    <span class="n">include_files</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-36-6" name="__codelineno-36-6" href="#__codelineno-36-6"></a>    <span class="n">file_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;counts&quot;</span><span class="p">],</span>        <span class="c1"># omit to get all types</span>
+<a id="__codelineno-36-7" name="__codelineno-36-7" href="#__codelineno-36-7"></a>    <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;by_sample&quot;</span><span class="p">,</span>           <span class="c1"># or &#39;by_type&#39; / &#39;flat&#39;</span>
+<a id="__codelineno-36-8" name="__codelineno-36-8" href="#__codelineno-36-8"></a><span class="p">)</span>
+</code></pre></div>
+<p>The <code>result["files"]</code> key then contains <code>downloaded</code>, <code>skipped</code>, and <code>failed</code>
+lists so you can see exactly what was fetched and what failed.</p>
+<hr />
+<h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../reference/">API reference</a> — every public function.</li>
+<li><a href="../schema/">Schema</a> — the table layout.</li>
+<li><a href="../install/">Install</a> — prerequisites and <code>~/.my.cnf</code> setup.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.code.annotate", "content.action.edit", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

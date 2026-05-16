@@ -1,0 +1,1998 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Schema, migrations, and Python tooling for the lab's MariaDB metadata database.">
+      
+      
+      
+        <link rel="canonical" href="https://polymerase3.github.io/noxdb/data-preparation/">
+      
+      
+        <link rel="prev" href="../quickstart/">
+      
+      
+        <link rel="next" href="../schema/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Preparing data - noxDB</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#preparing-data-for-import" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="noxDB" class="md-header__button md-logo" aria-label="noxDB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            noxDB
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Preparing data
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Polymerase3/noxdb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Polymerase3/noxdb
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../install/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Preparing data
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../schema/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Schema
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../testing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Testing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="noxDB" class="md-nav__button md-logo" aria-label="noxDB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    noxDB
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Polymerase3/noxdb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Polymerase3/noxdb
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparing data
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparing data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#folder-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Folder structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#projectyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        project.yaml
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subjectscsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        subjects.csv
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visitscsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        visits.csv
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#samplescsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        samples.csv
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="samples.csv">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sample_type-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sample_type values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sample-naming-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample naming convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filesmanifestcsv-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        files/manifest.csv (optional)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="files/manifest.csv (optional)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#allowed-file_type-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Allowed file_type values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metadata-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata columns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#encoding-and-formatting-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Encoding and formatting rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-dummy-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete dummy example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sending-your-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sending your data
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/connection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    connection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/projects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    projects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/subjects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subjects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/visits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    visits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/samples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    samples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/files/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fetch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fetch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/import/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project import
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#folder-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Folder structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#projectyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        project.yaml
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subjectscsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        subjects.csv
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visitscsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        visits.csv
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#samplescsv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        samples.csv
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="samples.csv">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sample_type-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sample_type values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sample-naming-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample naming convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filesmanifestcsv-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        files/manifest.csv (optional)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="files/manifest.csv (optional)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#allowed-file_type-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Allowed file_type values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metadata-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata columns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#encoding-and-formatting-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Encoding and formatting rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-dummy-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete dummy example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sending-your-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sending your data
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Polymerase3/noxdb/edit/main/docs/data-preparation.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="preparing-data-for-import">Preparing data for import<a class="headerlink" href="#preparing-data-for-import" title="Permanent link">&para;</a></h1>
+<p>This page is for <strong>lab members submitting a new project</strong>. You do not need
+access to the database server — just prepare your files in the format
+described here and send the zipped folder to
+<strong><a href="mailto:mateusz.kolek@meduniwien.ac.at">mateusz.kolek@meduniwien.ac.at</a></strong>.</p>
+<hr />
+<h2 id="folder-structure">Folder structure<a class="headerlink" href="#folder-structure" title="Permanent link">&para;</a></h2>
+<p>Create one folder per project. The folder name does not matter — the project
+name is taken from <code>project.yaml</code>. The layout must be exactly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>IBD_Vienna/                   ← folder name is free
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── project.yaml
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── subjects.csv
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── visits.csv
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── samples.csv
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>└── files/
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    └── manifest.csv          ← optional; omit the files/ folder if you have no paths yet
+</code></pre></div>
+<p>Zip the whole folder and send it. Nothing else is needed.</p>
+<hr />
+<h2 id="projectyaml">project.yaml<a class="headerlink" href="#projectyaml" title="Permanent link">&para;</a></h2>
+<p>A short YAML file with three fields:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">project_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IBD_Vienna</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;UC</span><span class="nv"> </span><span class="s">(n=40),</span><span class="nv"> </span><span class="s">CD</span><span class="nv"> </span><span class="s">(n=30),</span><span class="nv"> </span><span class="s">HC</span><span class="nv"> </span><span class="s">(n=20)</span><span class="nv"> </span><span class="s">—</span><span class="nv"> </span><span class="s">serum</span><span class="nv"> </span><span class="s">samples</span><span class="nv"> </span><span class="s">collected</span><span class="nv"> </span><span class="s">at</span><span class="nv"> </span><span class="s">MUW&quot;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">pi_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Dr.</span><span class="nv"> </span><span class="s">Hubner&quot;</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project_name</code></td>
+<td><strong>yes</strong></td>
+<td>Must be unique across the whole database. Use underscores, no spaces.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>no</td>
+<td>Free text. Quote it if it contains commas.</td>
+</tr>
+<tr>
+<td><code>pi_name</code></td>
+<td>no</td>
+<td>Responsible PI.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="subjectscsv">subjects.csv<a class="headerlink" href="#subjectscsv" title="Permanent link">&para;</a></h2>
+<p>One row per <strong>study subject</strong> (patient or healthy control). Controls
+(mocks, anchors, NCs) go in <code>samples.csv</code> — do not add them here.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>subject_code,sex,origin,meta_diagnosis,meta_IBD_score
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>IBD_VIE_001,F,Austria,UC,8
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>IBD_VIE_002,M,Austria,HC,
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>IBD_VIE_003,F,Germany,CD,5
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>IBD_VIE_004,M,Austria,UC,12
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Required</th>
+<th>Allowed values</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subject_code</code></td>
+<td><strong>yes</strong></td>
+<td>any string</td>
+<td>Must be unique globally. Use a stable code you'll recognise later.</td>
+</tr>
+<tr>
+<td><code>sex</code></td>
+<td><strong>yes</strong></td>
+<td><code>M</code>, <code>F</code></td>
+<td>Leave empty only if genuinely unknown — do not write <code>NA</code>.</td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td>no</td>
+<td>free text</td>
+<td>Country or region.</td>
+</tr>
+<tr>
+<td><code>meta_*</code></td>
+<td>no</td>
+<td>any</td>
+<td>See <a href="#metadata-columns">metadata columns</a> below.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="visitscsv">visits.csv<a class="headerlink" href="#visitscsv" title="Permanent link">&para;</a></h2>
+<p>One row per <strong>visit</strong> (timepoint). Most projects have one visit per subject
+(<code>baseline</code>). Multi-timepoint projects add one row per visit.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>subject_code,timepoint,group_test,age,meta_treatment
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>IBD_VIE_001,baseline,UC,34,infliximab
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>IBD_VIE_001,week12,UC,34,infliximab
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>IBD_VIE_002,baseline,HC,29,
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>IBD_VIE_003,baseline,CD,52,vedolizumab
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>IBD_VIE_004,baseline,UC,41,
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Required</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subject_code</code></td>
+<td><strong>yes</strong></td>
+<td>Must match a code in <code>subjects.csv</code>.</td>
+</tr>
+<tr>
+<td><code>timepoint</code></td>
+<td><strong>yes</strong></td>
+<td>Free text label: <code>baseline</code>, <code>week12</code>, <code>follow_up</code>, etc.</td>
+</tr>
+<tr>
+<td><code>group_test</code></td>
+<td><strong>yes</strong></td>
+<td>Clinical group: <code>UC</code>, <code>CD</code>, <code>HC</code>, <code>patient</code>, <code>control</code>, etc.</td>
+</tr>
+<tr>
+<td><code>age</code></td>
+<td><strong>yes</strong></td>
+<td>Integer. Leave empty if unknown (not <code>NA</code>).</td>
+</tr>
+<tr>
+<td><code>meta_*</code></td>
+<td>no</td>
+<td>Visit-level metadata such as treatment, score, BMI.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="samplescsv">samples.csv<a class="headerlink" href="#samplescsv" title="Permanent link">&para;</a></h2>
+<p>One row per <strong>sample tube</strong> measured in the assay. This includes your study
+samples <strong>and</strong> all plate controls (mockIP, anchor, NC) that appear on the
+same plate. Input samples go here too if you have them.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sample_name,subject_code,timepoint,sample_type,sqr,sqrp,library,antibody_class,meta_batch
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>R25P01_01_IBD001_IBD_VIE_A_T_C2,IBD_VIE_001,baseline,sample,25,01,A_T_C2,,1
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>R25P01_02_IBD002_IBD_VIE_A_T_C2,IBD_VIE_001,week12,sample,25,01,A_T_C2,,1
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>R25P01_03_IBD003_IBD_VIE_A_T_C2,IBD_VIE_002,baseline,sample,25,01,A_T_C2,,1
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>R25P01_04_IBD004_IBD_VIE_A_T_C2,IBD_VIE_003,baseline,sample,25,01,A_T_C2,,1
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>R25P01_81_Mock_1_A_T_C2,R25P01_81_Mock_1_A_T_C2,baseline,mockIP,25,01,A_T_C2,,
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>R25P01_82_Mock_2_A_T_C2,R25P01_82_Mock_2_A_T_C2,baseline,mockIP,25,01,A_T_C2,,
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>R25P01_85_Anchor_1_A_T_C2,R25P01_85_Anchor_1_A_T_C2,baseline,anchor,25,01,A_T_C2,,
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>R25P01_89_NC_1_A_T_C2,R25P01_89_NC_1_A_T_C2,baseline,NC,25,01,A_T_C2,,
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Required</th>
+<th>Allowed values</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sample_name</code></td>
+<td><strong>yes</strong></td>
+<td>any string</td>
+<td>Must be <strong>globally unique</strong>. Use the full name from the sequencing output — do not shorten it.</td>
+</tr>
+<tr>
+<td><code>subject_code</code></td>
+<td><strong>yes</strong></td>
+<td>—</td>
+<td>Must match <code>subjects.csv</code> for real samples. For controls, repeat the <code>sample_name</code> in this column (controls have no subject).</td>
+</tr>
+<tr>
+<td><code>timepoint</code></td>
+<td><strong>yes</strong></td>
+<td>—</td>
+<td>Must match <code>visits.csv</code> for real samples. Use <code>baseline</code> for controls.</td>
+</tr>
+<tr>
+<td><code>sample_type</code></td>
+<td><strong>yes</strong></td>
+<td><code>sample</code> <code>mockIP</code> <code>anchor</code> <code>NC</code> <code>input</code></td>
+<td>See table below.</td>
+</tr>
+<tr>
+<td><code>sqr</code></td>
+<td><strong>yes</strong></td>
+<td>integer string</td>
+<td>SQR number from your run sheet (zero-pad to 2 digits, e.g. <code>07</code>).</td>
+</tr>
+<tr>
+<td><code>sqrp</code></td>
+<td><strong>yes</strong></td>
+<td>integer string</td>
+<td>SQRP number. Leave empty for input samples if not applicable.</td>
+</tr>
+<tr>
+<td><code>library</code></td>
+<td><strong>yes</strong></td>
+<td>e.g. <code>A_T_C2</code></td>
+<td>Library combination string from your run sheet.</td>
+</tr>
+<tr>
+<td><code>antibody_class</code></td>
+<td>no</td>
+<td>free text</td>
+<td>Only relevant for antibody-capture assays.</td>
+</tr>
+<tr>
+<td><code>meta_*</code></td>
+<td>no</td>
+<td>any</td>
+<td>Sample-level metadata.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sample_type-values">sample_type values<a class="headerlink" href="#sample_type-values" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sample</code></td>
+<td>Real study sample (patient / healthy control)</td>
+</tr>
+<tr>
+<td><code>mockIP</code></td>
+<td>Mock immunoprecipitation — negative IP control, no antibody</td>
+</tr>
+<tr>
+<td><code>anchor</code></td>
+<td>Anchor / carry-over control — same reference material across all plates</td>
+</tr>
+<tr>
+<td><code>NC</code></td>
+<td>Negative control — no template</td>
+</tr>
+<tr>
+<td><code>input</code></td>
+<td>Input DNA — total chromatin before IP</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sample-naming-convention">Sample naming convention<a class="headerlink" href="#sample-naming-convention" title="Permanent link">&para;</a></h3>
+<p>Use the format your sequencing facility provides, which typically follows:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>R{run}P{plate}_{position}_{identifier}_{project}_{library}
+</code></pre></div>
+<p>For example: <code>R25P01_03_IBD003_IBD_VIE_A_T_C2</code></p>
+<ul>
+<li><code>R25</code> — run 25</li>
+<li><code>P01</code> — plate 01</li>
+<li><code>03</code> — well position 03</li>
+<li><code>IBD003</code> — your internal sample code</li>
+<li><code>IBD_VIE</code> — project code</li>
+<li><code>A_T_C2</code> — library</li>
+</ul>
+<p>Controls follow the same run/plate prefix but use reserved positions and
+names such as <code>Mock_1</code>, <code>Mock_2</code>, <code>Anchor_1</code>, <code>NC_1</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>R25P01_81_Mock_1_A_T_C2
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>R25P01_82_Mock_2_A_T_C2
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>R25P01_85_Anchor_1_A_T_C2
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>R25P01_89_NC_1_A_T_C2
+</code></pre></div>
+<hr />
+<h2 id="filesmanifestcsv-optional">files/manifest.csv <em>(optional)</em><a class="headerlink" href="#filesmanifestcsv-optional" title="Permanent link">&para;</a></h2>
+<p>Include this file if you know the paths to the output files on the LiSC
+storage. Leave it out if you do not have paths yet — files can be registered
+later.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sample_name,file_path,file_type,storage_tier
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>R25P01_01_IBD001_IBD_VIE_A_T_C2,/lisc/data/work/ccr/counts/R25P01_01_IBD001_IBD_VIE_A_T_C2.count.gz,counts,work
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>R25P01_01_IBD001_IBD_VIE_A_T_C2,/lisc/data/work/ccr/zigp/R25P01_01_IBD001_IBD_VIE_A_T_C2.csv,zigp_norm,work
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Required</th>
+<th>Allowed values</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sample_name</code></td>
+<td><strong>yes</strong></td>
+<td>—</td>
+<td>Must match a name in <code>samples.csv</code>.</td>
+</tr>
+<tr>
+<td><code>file_path</code></td>
+<td><strong>yes</strong></td>
+<td>absolute path</td>
+<td>Full path as it appears on the LiSC filesystem.</td>
+</tr>
+<tr>
+<td><code>file_type</code></td>
+<td><strong>yes</strong></td>
+<td>see below</td>
+<td>Type of the file.</td>
+</tr>
+<tr>
+<td><code>storage_tier</code></td>
+<td>no</td>
+<td><code>work</code> <code>archive</code> <code>scratch</code> <code>external</code></td>
+<td>Defaults to <code>work</code> if omitted.</td>
+</tr>
+<tr>
+<td><code>checksum_md5</code></td>
+<td>no</td>
+<td>32-char hex</td>
+<td>Leave empty; we compute it on import.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="allowed-file_type-values">Allowed file_type values<a class="headerlink" href="#allowed-file_type-values" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>counts</code></td>
+<td>Raw read count table (<code>.count.gz</code>)</td>
+</tr>
+<tr>
+<td><code>zigp_norm</code></td>
+<td>ZIGP-normalised table (<code>.csv</code>)</td>
+</tr>
+<tr>
+<td><code>beer_norm</code></td>
+<td>BEER-normalised table</td>
+</tr>
+<tr>
+<td><code>edger_norm</code></td>
+<td>edgeR-normalised table</td>
+</tr>
+<tr>
+<td><code>fastq_r1</code></td>
+<td>FASTQ read 1</td>
+</tr>
+<tr>
+<td><code>fastq_r2</code></td>
+<td>FASTQ read 2</td>
+</tr>
+<tr>
+<td><code>fastq_single</code></td>
+<td>Single-end FASTQ</td>
+</tr>
+<tr>
+<td><code>bam</code></td>
+<td>Aligned BAM</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="metadata-columns">Metadata columns<a class="headerlink" href="#metadata-columns" title="Permanent link">&para;</a></h2>
+<p>Any column whose name starts with <code>meta_</code> is treated as a typed metadata
+field. The prefix is stripped and the remainder becomes the key name stored
+in the database.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>meta_diagnosis    → key &quot;diagnosis&quot;
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>meta_IBD_score    → key &quot;IBD_score&quot;
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>meta_treatment    → key &quot;treatment&quot;
+</code></pre></div>
+<p>Values are automatically coerced: <code>true</code>/<code>false</code> → boolean, integers →
+integer, decimals → float, everything else → text. <strong>Empty cells are
+silently skipped</strong> — they do not insert a NULL; they simply produce no
+metadata entry for that row.</p>
+<ul>
+<li>Metadata on <code>visits.csv</code> is stored per visit (time-varying values: scores, treatment).</li>
+<li>Metadata on <code>samples.csv</code> is stored per sample (technical values: batch, plate position).</li>
+<li>You can have any number of <code>meta_*</code> columns. Unknown non-<code>meta_</code> columns
+  are ignored with a warning, so check the import log.</li>
+</ul>
+<hr />
+<h2 id="encoding-and-formatting-rules">Encoding and formatting rules<a class="headerlink" href="#encoding-and-formatting-rules" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Format:</strong> UTF-8, comma-separated (<code>,</code>), Unix line endings.</li>
+<li><strong>Header row:</strong> always present, first row.</li>
+<li><strong>No trailing spaces</strong> in cell values.</li>
+<li><strong>Empty optional fields:</strong> leave the cell blank — do not write <code>NA</code>, <code>N/A</code>, <code>none</code>, or <code>-</code>.</li>
+<li><strong>Quote strings</strong> that contain commas: <code>"IBD cohort, Vienna"</code>.</li>
+<li>The CSV files can be prepared in Excel and exported with <em>File → Save As →
+  CSV UTF-8 (comma-delimited)</em>. Double-check that Excel has not silently
+  converted your SQR codes to dates (e.g. <code>07</code> → <code>7-Jan</code>).</li>
+</ul>
+<hr />
+<h2 id="complete-dummy-example">Complete dummy example<a class="headerlink" href="#complete-dummy-example" title="Permanent link">&para;</a></h2>
+<p>Below is a self-contained example for a two-timepoint IBD project on one
+plate (SQR 25, SQRP 01).</p>
+<p><strong><code>project.yaml</code></strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">project_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IBD_Vienna</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;UC</span><span class="nv"> </span><span class="s">(n=40),</span><span class="nv"> </span><span class="s">CD</span><span class="nv"> </span><span class="s">(n=30),</span><span class="nv"> </span><span class="s">HC</span><span class="nv"> </span><span class="s">(n=20)</span><span class="nv"> </span><span class="s">serum</span><span class="nv"> </span><span class="s">samples</span><span class="nv"> </span><span class="s">—</span><span class="nv"> </span><span class="s">MUW</span><span class="nv"> </span><span class="s">cohort&quot;</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nt">pi_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Dr.</span><span class="nv"> </span><span class="s">Hubner&quot;</span>
+</code></pre></div>
+<p><strong><code>subjects.csv</code></strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>subject_code,sex,origin,meta_diagnosis
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>IBD_VIE_001,F,Austria,UC
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>IBD_VIE_002,M,Austria,HC
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>IBD_VIE_003,F,Germany,CD
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>IBD_VIE_004,M,Austria,UC
+</code></pre></div>
+<p><strong><code>visits.csv</code></strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>subject_code,timepoint,group_test,age,meta_treatment,meta_CRP
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>IBD_VIE_001,baseline,UC,34,infliximab,18.4
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>IBD_VIE_001,week12,UC,34,infliximab,3.1
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>IBD_VIE_002,baseline,HC,29,,0.8
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>IBD_VIE_003,baseline,CD,52,vedolizumab,11.2
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>IBD_VIE_004,baseline,UC,41,,24.7
+</code></pre></div>
+<p><strong><code>samples.csv</code></strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>sample_name,subject_code,timepoint,sample_type,sqr,sqrp,library,antibody_class
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>R25P01_01_IBD001_IBD_VIE_A_T_C2,IBD_VIE_001,baseline,sample,25,01,A_T_C2,
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>R25P01_02_IBD002_IBD_VIE_A_T_C2,IBD_VIE_001,week12,sample,25,01,A_T_C2,
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>R25P01_03_IBD003_IBD_VIE_A_T_C2,IBD_VIE_002,baseline,sample,25,01,A_T_C2,
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>R25P01_04_IBD004_IBD_VIE_A_T_C2,IBD_VIE_003,baseline,sample,25,01,A_T_C2,
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>R25P01_05_IBD005_IBD_VIE_A_T_C2,IBD_VIE_004,baseline,sample,25,01,A_T_C2,
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>R25P01_81_Mock_1_A_T_C2,R25P01_81_Mock_1_A_T_C2,baseline,mockIP,25,01,A_T_C2,
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>R25P01_82_Mock_2_A_T_C2,R25P01_82_Mock_2_A_T_C2,baseline,mockIP,25,01,A_T_C2,
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>R25P01_83_Mock_3_A_T_C2,R25P01_83_Mock_3_A_T_C2,baseline,mockIP,25,01,A_T_C2,
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>R25P01_84_Mock_4_A_T_C2,R25P01_84_Mock_4_A_T_C2,baseline,mockIP,25,01,A_T_C2,
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>R25P01_85_Anchor_1_A_T_C2,R25P01_85_Anchor_1_A_T_C2,baseline,anchor,25,01,A_T_C2,
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>R25P01_86_Anchor_2_A_T_C2,R25P01_86_Anchor_2_A_T_C2,baseline,anchor,25,01,A_T_C2,
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>R25P01_89_NC_1_A_T_C2,R25P01_89_NC_1_A_T_C2,baseline,NC,25,01,A_T_C2,
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>R25P01_90_NC_2_A_T_C2,R25P01_90_NC_2_A_T_C2,baseline,NC,25,01,A_T_C2,
+</code></pre></div>
+<p><strong><code>files/manifest.csv</code></strong> <em>(optional)</em></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>sample_name,file_path,file_type,storage_tier
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>R25P01_01_IBD001_IBD_VIE_A_T_C2,/lisc/data/work/ccr/counts/R25P01_01_IBD001_IBD_VIE_A_T_C2.count.gz,counts,work
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>R25P01_01_IBD001_IBD_VIE_A_T_C2,/lisc/data/work/ccr/zigp/R25P01_01_IBD001_IBD_VIE_A_T_C2.csv,zigp_norm,work
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>R25P01_02_IBD002_IBD_VIE_A_T_C2,/lisc/data/work/ccr/counts/R25P01_02_IBD002_IBD_VIE_A_T_C2.count.gz,counts,work
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>R25P01_02_IBD002_IBD_VIE_A_T_C2,/lisc/data/work/ccr/zigp/R25P01_02_IBD002_IBD_VIE_A_T_C2.csv,zigp_norm,work
+</code></pre></div>
+<hr />
+<h2 id="sending-your-data">Sending your data<a class="headerlink" href="#sending-your-data" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Prepare the folder as described above.</li>
+<li>Zip it: <code>zip -r IBD_Vienna.zip IBD_Vienna/</code></li>
+<li>Send to <strong><a href="mailto:mateusz.kolek@meduniwien.ac.at">mateusz.kolek@meduniwien.ac.at</a></strong> with the subject line <code>noxDB import — &lt;project_name&gt;</code>.</li>
+</ol>
+<p>Include a short note with:
+- The project name and a one-line description.
+- Whether the files are already on LiSC storage (i.e. whether <code>manifest.csv</code> is included).
+- Any unusual aspects (multiple plates, repeated samples, missing ages, etc.).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.code.annotate", "content.action.edit", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

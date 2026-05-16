@@ -1,0 +1,2802 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Schema, migrations, and Python tooling for the lab's MariaDB metadata database.">
+      
+      
+      
+        <link rel="canonical" href="https://polymerase3.github.io/noxdb/changelog/">
+      
+      
+        <link rel="prev" href="../contributing/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Changelog - noxDB</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="noxDB" class="md-header__button md-logo" aria-label="noxDB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            noxDB
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Polymerase3/noxdb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Polymerase3/noxdb
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../install/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../data-preparation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Preparing data
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../schema/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Schema
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../testing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Testing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="noxDB" class="md-nav__button md-logo" aria-label="noxDB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    noxDB
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Polymerase3/noxdb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Polymerase3/noxdb
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-preparation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparing data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/connection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    connection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/projects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    projects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/subjects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subjects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/visits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    visits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/samples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    samples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/files/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fetch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fetch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/import/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project import
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Unreleased]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#070-2026-05-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.7.0] - 2026-05-16
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.7.0] - 2026-05-16">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#052-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.5.2] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.5.2] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#051-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.5.1] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.5.1] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#050-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.5.0] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.5.0] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#045-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.5] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.5] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#044-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.4] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.4] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#043-2026-05-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.3] - 2026-05-14
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.3] - 2026-05-14">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maintenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#042-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.2] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.2] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#041-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.1] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.1] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#040-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.0] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.0] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#030-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.3.0] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.3.0] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#023-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.3] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.3] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#022-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.2] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.2] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#021-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.1] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.1] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#020-2026-05-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.0] - 2026-05-09
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.0] - 2026-05-09">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#011-2026-05-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.1] - 2026-05-08
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.1] - 2026-05-08">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Unreleased]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#070-2026-05-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.7.0] - 2026-05-16
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.7.0] - 2026-05-16">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#052-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.5.2] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.5.2] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#051-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.5.1] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.5.1] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#050-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.5.0] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.5.0] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#045-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.5] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.5] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#044-2026-05-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.4] - 2026-05-15
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.4] - 2026-05-15">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#043-2026-05-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.3] - 2026-05-14
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.3] - 2026-05-14">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maintenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#042-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.2] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.2] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#041-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.1] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.1] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changed_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#040-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.0] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.0] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#030-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.3.0] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.3.0] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#023-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.3] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.3] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#022-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.2] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.2] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fixed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#021-2026-05-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.1] - 2026-05-11
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.1] - 2026-05-11">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#020-2026-05-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.0] - 2026-05-09
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.0] - 2026-05-09">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#011-2026-05-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.1] - 2026-05-08
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.1] - 2026-05-08">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Polymerase3/noxdb/edit/main/docs/changelog.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<p>All notable changes to this project are documented in this file.</p>
+<p>The format follows <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a>,
+and this project uses <a href="https://semver.org/">Semantic Versioning</a>.</p>
+<p>Every pull request must bump the version in <code>pyproject.toml</code> and add a
+matching entry below; this is enforced by <code>.github/workflows/pr-checks.yml</code>.</p>
+<h2 id="unreleased">[Unreleased]<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<h2 id="070-2026-05-16">[0.7.0] - 2026-05-16<a class="headerlink" href="#070-2026-05-16" title="Permanent link">&para;</a></h2>
+<p>Many-to-many project↔sample schema. Applied to production <code>ccr_metadata</code>
+via <code>schema/003_cross_project_samples.sql</code>.</p>
+<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>schema/003_cross_project_samples.sql</code>: new <code>project_samples</code>
+  junction table — the sole source of truth for project↔sample
+  membership (a sample can belong to several projects). Backfills
+  study/input/control links and canonicalizes existing <code>SQR</code>/<code>SQRP</code>.</li>
+<li><code>samples.link_to_project()</code>: idempotent project↔sample link helper.</li>
+<li><code>samples.canonical_plate_id()</code>: single SQR/SQRP canonicalization
+  chokepoint (strip whitespace, <code>NA</code>/<code>N/A</code>/empty → <code>""</code>, padding
+  preserved); applied on every write and reused by the importer, which
+  now also validates plate ids and reports normalizations.</li>
+<li><code>subjects.get_or_create()</code> raises on a reused <code>subject_code</code> with a
+  conflicting <code>sex</code>/<code>origin</code> (loud cross-study collision guard).</li>
+</ul>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Project membership lives entirely in <code>project_samples</code>; <code>subjects</code>
+  no longer carries <code>project_id</code> and <code>subject_code</code> is now globally
+  unique. <code>subject → visit → sample</code> is pure lineage with no project
+  affiliation.</li>
+<li>Controls (mockIP/anchor/NC) are linked to every study project that
+  shares their plate (SQR+SQRP) at import/migration time instead of
+  living in dedicated control projects.</li>
+<li><code>queries.*</code> project-scoped helpers, <code>workflows.register_subject_with_visit</code>,
+  and the project importer rewritten to the junction model;
+  <code>project_summary.n_samples</code> now counts every linked sample (controls
+  included).</li>
+<li><code>scripts/add_controls.py</code> redesigned to emit controls into the
+  plate-sharing study bundles rather than dedicated control projects.</li>
+<li>Docs (<code>schema.md</code>, <code>index.md</code>, <code>quickstart.md</code>,
+  <code>reference/index.md</code>) updated to the junction model; <code>quickstart.md</code>
+  regenerated from a live run against the migrated database.</li>
+</ul>
+<h3 id="removed">Removed<a class="headerlink" href="#removed" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Dedicated <code>mockIP</code> / <code>anchor</code> / <code>NC</code> projects (deleted by migration
+  003; the <code>input</code> umbrella project is retained).</li>
+<li><code>scripts/fix_controls_projects.py</code> (obsolete under the new model).</li>
+</ul>
+<h3 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>users/revoke_readwrite.sql</code>: revoked INSERT/UPDATE/DELETE from the
+  two analyst accounts (SELECT-only like other non-admin users) —
+  ad-hoc writes would bypass the <code>project_samples</code> invariant.</li>
+</ul>
+<h2 id="052-2026-05-15">[0.5.2] - 2026-05-15<a class="headerlink" href="#052-2026-05-15" title="Permanent link">&para;</a></h2>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>README.md</code>: corrected all documentation site links from <code>noxdb</code> to <code>noxDB</code>
+  to match the renamed GitHub Pages URL.</li>
+<li><code>README.md</code>: corrected codecov badge and link to point to the renamed
+  repository (<code>noxDB</code>).</li>
+</ul>
+<h2 id="051-2026-05-15">[0.5.1] - 2026-05-15<a class="headerlink" href="#051-2026-05-15" title="Permanent link">&para;</a></h2>
+<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>docs/index.md</code>: replaced CLI card with cards for Preparing data, Testing,
+  and Contributing; added Gabriel Innocenti's email to the contact section.</li>
+<li><code>README.md</code>: restored WIP status, codecov, and version badges that were
+  removed in a previous documentation pass.</li>
+</ul>
+<h2 id="050-2026-05-15">[0.5.0] - 2026-05-15<a class="headerlink" href="#050-2026-05-15" title="Permanent link">&para;</a></h2>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>docs/quickstart.md</code> section 14: full <code>fetch</code> module example with live
+  output — project structure (<code>projects.get</code>, <code>project_summary</code>), file
+  manifest (<code>files_for_project</code>), and <code>fetch.export_project</code> producing a
+  local folder with <code>metadata.csv</code> and <code>README.txt</code>. Also shows the
+  <code>include_files=True</code> / <code>layout</code> / <code>file_types</code> path for on-LiSC use.</li>
+<li><code>docs/data-preparation.md</code>: new data-preparation section covering how
+  raw exports are transformed before import.</li>
+</ul>
+<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>docs/schema.md</code> fully rewritten: every table now has a complete
+  column-by-column reference (type, nullability, constraints). Controls
+  design documented in a dedicated section — mockIP, anchor, NC, and input
+  each live in their own project (ids 61, 64, 67, 58 respectively) and are
+  linked back to study projects via the <code>SQR</code>/<code>SQRP</code> plate coordinates.
+  Nullable <code>sex</code>/<code>age</code> and the <code>NC</code> ENUM addition from migration <code>002</code> are
+  called out inline. Previously wrong column names (<code>meta_key</code> → <code>key_name</code>,
+  <code>value_float</code> → <code>value_numeric</code>) corrected.</li>
+<li><code>docs/cli.md</code> removed; CLI is no longer part of the package.</li>
+<li><code>mkdocs.yml</code> updated to reflect the new documentation structure.</li>
+<li>DB renamed to <code>noxDB</code>.</li>
+</ul>
+<h2 id="045-2026-05-15">[0.4.5] - 2026-05-15<a class="headerlink" href="#045-2026-05-15" title="Permanent link">&para;</a></h2>
+<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>scripts/add_controls.py</code>: recovers anchor, mock, NC, and input control
+  samples from <code>Overview_SQRs.csv</code> (absent from per-project metadata CSVs)
+  and appends them to the four master CSVs in the import directory.
+  Input samples are placed in a standalone <code>"input"</code> project. Safe to
+  re-run — already-present <code>sample_name</code> entries are silently skipped.</li>
+</ul>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>subjects.create</code> / <code>subjects.get_or_create</code>: the <code>sex or None</code>
+  normalisation now also converts the literal strings <code>'NA'</code> / <code>'N/A'</code>
+  to <code>NULL</code>, preventing a DB-side <code>CHECK</code> constraint violation when
+  <code>prepare_migration.py</code> writes those placeholders.</li>
+<li>Import validation (<code>runner._validate_schema</code>, <code>runner._commit</code>): sex
+  and age values of <code>'NA'</code> / <code>'N/A'</code> (written by <code>prepare_migration.py</code>
+  for real samples with missing demographics) are now treated as nullish,
+  consistent with the DB schema allowing <code>NULL</code> for both columns.</li>
+</ul>
+<h2 id="044-2026-05-15">[0.4.4] - 2026-05-15<a class="headerlink" href="#044-2026-05-15" title="Permanent link">&para;</a></h2>
+<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>schema/002_controls_support.sql</code>: migration that makes <code>subjects.sex</code>
+  and <code>visits.age</code> nullable (non-null values still constrained to
+  <code>'M'/'F'</code> and <code>&gt;= 0</code> respectively) and adds <code>'NC'</code> to the
+  <code>samples.sample_type</code> ENUM.</li>
+<li><code>scripts/prepare_migration.py</code>: <code>_detect_sample_type()</code> infers
+  <code>sample_type</code> from substrings in <code>SampleName</code> (<code>Anchor</code> → <code>anchor</code>,
+  <code>Mock</code> → <code>mockIP</code>, <code>NC</code> → <code>NC</code>, <code>input</code> → <code>input</code>). Control samples
+  no longer generate spurious sex/age warnings and are written with
+  blank sex/age (stored as NULL) rather than a placeholder <code>0</code>.</li>
+<li><code>users/revoke_readwrite.sql</code>: one-time script to downgrade
+  <code>lovro.trgovec-greif</code> and <code>melanie.prinzensteiner</code> to <code>SELECT</code>-only.</li>
+</ul>
+<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>subjects.create</code> / <code>subjects.get_or_create</code>: <code>sex</code> parameter is now
+  <code>str | None</code>; empty string is normalised to <code>NULL</code> on insert.</li>
+<li><code>visits.create</code> / <code>visits.get_or_create</code>: <code>age</code> parameter is now
+  <code>int | None</code>.</li>
+<li>Import validation (<code>runner._validate_schema</code>): sex and age checks are
+  skipped when the value is empty/null rather than raising an error.</li>
+<li><code>users/users.sql</code>: <code>lovro.trgovec-greif</code> and <code>melanie.prinzensteiner</code>
+  reduced to <code>SELECT</code>-only, consistent with all other non-admin users.</li>
+</ul>
+<h2 id="043-2026-05-14">[0.4.3] - 2026-05-14<a class="headerlink" href="#043-2026-05-14" title="Permanent link">&para;</a></h2>
+<h3 id="added_4">Added<a class="headerlink" href="#added_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>scripts/prepare_migration.py</code> and <code>scripts/bulk_import.py</code>: two CLI
+  scripts for bulk-loading legacy data. <code>prepare_migration.py</code> transforms
+  a raw export directory into the canonical import folder layout expected
+  by <code>import_project_from_dir</code>; <code>bulk_import.py</code> wraps it to drive
+  multiple projects in one run.</li>
+</ul>
+<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>counts</code> files may now be stored in the <code>work</code> tier as well as
+  <code>archive</code>. The hard <code>archive ↔ work</code> flip rejection in
+  <code>files._resolve_tier</code> is removed; the <code>scratch</code>/<code>external</code> escape
+  hatches are unchanged.</li>
+<li><code>files.register</code> / <code>files.get_or_register</code> gain a <code>skip_disk_check</code>
+  parameter (forwarded from <code>_inspect_file</code>): when <code>True</code>, path-prefix
+  and on-disk stat/MD5 checks are skipped and <code>file_size_bytes</code> is stored
+  as <code>NULL</code>. Useful when registering files that are not yet mounted on
+  the current host.</li>
+</ul>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>paramiko</code> pinned to <code>&lt;4.0</code> in the <code>analysis</code> optional-dependency
+  group. <code>paramiko</code> 4+ removed <code>DSSKey</code>; <code>sshtunnel</code> 0.4.0 still
+  references it, causing an <code>AttributeError</code> on <code>init_pool()</code> when the
+  SSH tunnel path is taken.</li>
+</ul>
+<h3 id="maintenance">Maintenance<a class="headerlink" href="#maintenance" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>migration_import/</code>, <code>migrations/</code>, and <code>notebooks/</code> added to
+  <code>.gitignore</code>.</li>
+</ul>
+<h2 id="042-2026-05-11">[0.4.2] - 2026-05-11<a class="headerlink" href="#042-2026-05-11" title="Permanent link">&para;</a></h2>
+<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>README.md</code> rewritten as a plain, copy-pasteable onboarding page:
+  short summary of the repo's purpose, step-by-step install (system
+  deps → <code>git clone</code> → venv → <code>pip install -e ".[analysis]"</code> → smoke
+  test), minimal <code>~/.my.cnf</code> example, links to the docs site for
+  everything else. The access-tier section is dropped (lives on the
+  docs site / is managed off-repo); the Contact section now lists
+  Gabriel Innocenti alongside Mateusz Kołek.</li>
+</ul>
+<h2 id="041-2026-05-11">[0.4.1] - 2026-05-11<a class="headerlink" href="#041-2026-05-11" title="Permanent link">&para;</a></h2>
+<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Converted all public docstrings in <code>noxdb</code> (<code>connection</code>,
+  <code>projects</code>, <code>subjects</code>, <code>visits</code>, <code>samples</code>, <code>metadata</code>, <code>files</code>,
+  <code>queries</code>, <code>workflows</code>, <code>fetch</code>) and the <code>_import</code> subpackage to
+  Google style with explicit <code>Args:</code> / <code>Returns:</code> / <code>Raises:</code> sections.
+  No code behavior changes. The API-reference pages on the docs site
+  now render structured parameter tables.</li>
+<li><code>docs.yml</code> runs <code>mkdocs build</code> without <code>--strict</code>. Griffe warns on
+  the deliberately-untyped <code>cur</code> parameter (cursor can be either a
+  <code>mariadb</code> cursor or a <code>_LoggingCursor</code> wrapper); adding <code>cur: Any</code>
+  everywhere would be churn without semantic gain.</li>
+</ul>
+<h2 id="040-2026-05-11">[0.4.0] - 2026-05-11<a class="headerlink" href="#040-2026-05-11" title="Permanent link">&para;</a></h2>
+<h3 id="added_5">Added<a class="headerlink" href="#added_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Documentation site scaffold built with MkDocs + Material theme +
+  mkdocstrings (<code>mkdocs.yml</code>, <code>docs/{index,install,quickstart,schema,
+  cli,contributing,changelog}.md</code>, and per-module pages under
+  <code>docs/reference/</code>). Auto-generates API reference from package
+  docstrings; <code>NEWS.md</code> and <code>CONTRIBUTING.md</code> are surfaced via
+  <code>mkdocs-include-markdown-plugin</code>.</li>
+<li><code>CONTRIBUTING.md</code> documenting dev setup, branching, the version +
+  <code>NEWS.md</code> requirement enforced by <code>pr-checks.yml</code>, docstring style,
+  and how to preview the docs locally.</li>
+<li><code>.github/workflows/docs.yml</code> — builds the site with <code>mkdocs build
+  --strict</code> on every PR and deploys to GitHub Pages on every push to
+  <code>main</code>. Concurrency group keeps deploys serialized.</li>
+<li><code>docs</code> optional-dependency group in <code>pyproject.toml</code>
+  (<code>mkdocs-material</code>, <code>mkdocstrings[python]</code>,
+  <code>mkdocs-include-markdown-plugin</code>). <code>pip install -e ".[docs]"</code> then
+  <code>mkdocs serve</code> is the local preview path.</li>
+</ul>
+<h2 id="030-2026-05-11">[0.3.0] - 2026-05-11<a class="headerlink" href="#030-2026-05-11" title="Permanent link">&para;</a></h2>
+<h3 id="added_6">Added<a class="headerlink" href="#added_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Master import: load a whole project folder (<code>project.yaml</code>,
+  <code>subjects.csv</code>, <code>visits.csv</code>, <code>samples.csv</code>, <code>files/manifest.csv</code>)
+  into the database in one atomic transaction.</li>
+<li><code>noxdb._import.import_project_from_dir(root, *, dry_run,
+    force, compute_md5, skip_disk_check, log_dir)</code> is the library entry
+    point; it raises <code>ProjectImportError</code> with an exhaustive list of
+    collected errors when validation fails.</li>
+<li><code>scripts/import_project.py</code> is the matching CLI, exits 0 / 2 / 3
+    for success / validation failure / unexpected error and writes a
+    JSON report to stdout plus <code>&lt;log_dir&gt;/&lt;ts&gt;_&lt;project&gt;.log</code>.</li>
+<li>CSV columns prefixed with <code>meta_</code> are treated as typed metadata
+    keys; values are coerced int → float → bool → str.</li>
+<li>Re-running on the same folder requires <code>--force</code> (or <code>force=True</code>).
+    With <code>--force</code> the importer is idempotent: re-uses every existing
+    row via <code>get_or_create</code>/<code>set_*</code> and reports <code>inserted</code> vs
+    <code>existing</code>/<code>unchanged</code> per table.</li>
+<li>Cross-project collisions on <code>sample_name</code> / <code>file_path</code> are blocked
+    even with <code>--force</code> (those UNIQUEs are global by design).</li>
+<li><code>pyyaml&gt;=6.0</code> added as a hard dependency (required to read
+  <code>project.yaml</code>).</li>
+</ul>
+<h2 id="023-2026-05-11">[0.2.3] - 2026-05-11<a class="headerlink" href="#023-2026-05-11" title="Permanent link">&para;</a></h2>
+<h3 id="added_7">Added<a class="headerlink" href="#added_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>fetch</code> module that materializes a project from the database to a
+  local folder:</li>
+<li><code>export_metadata_table</code> — write the project tidy table to CSV and/or
+    XLSX (requires <code>pandas</code>, plus <code>openpyxl</code> for <code>xlsx</code>).</li>
+<li><code>download_files_for_project</code> — copy every registered file for a
+    project into a target directory. Uses paramiko SFTP when an
+    <code>ssh_host</code> is configured (via <code>~/.my.cnf [noxdb-ssh]</code>, <code>NOXDB_SSH_*</code>
+    env vars, or kwargs), and falls back to <code>shutil.copyfile</code> when
+    running on LiSC with the storage mounted locally. Supports
+    <code>by_sample</code>, <code>by_type</code>, and <code>flat</code> output layouts; resumes by
+    skipping destinations that already exist.</li>
+<li><code>export_project</code> — one-shot snapshot: <code>metadata.csv</code> (and optionally
+    <code>metadata.xlsx</code>), <code>files/&lt;layout&gt;/...</code>, and a <code>README.txt</code> summary.</li>
+<li><code>paramiko&gt;=3.0</code> added to the <code>analysis</code> optional-dependency group.</li>
+</ul>
+<h2 id="022-2026-05-11">[0.2.2] - 2026-05-11<a class="headerlink" href="#022-2026-05-11" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>get_connection()</code> now forces server-side <code>SET autocommit=0</code> on every
+  pool checkout instead of relying on the Python-side <code>conn.autocommit</code>
+  setter. The setter elides the <code>SET</code> command when its cached flag
+  already matches, so after a pool reset the server could be left in
+  autocommit=1 while Python thought it was 0. Inserts then auto-committed
+  and <code>rollback()</code> was a silent no-op. Triggered intermittently for
+  later-session tests; surfaced by a regression test against the
+  <code>subjects</code> table.</li>
+</ul>
+<h3 id="added_8">Added<a class="headerlink" href="#added_8" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>workflows</code> module bundling atomic, idempotent high-level operations
+  on top of the per-table CRUD helpers:</li>
+<li><code>register_subject_with_visit</code> — <code>subjects.get_or_create</code> +
+    <code>visits.get_or_create</code> + optional <code>visit_metadata</code> upsert, all in
+    one transaction.</li>
+<li><code>register_sample_with_files</code> — <code>samples.get_or_create</code> + optional
+    <code>sample_metadata</code> upsert + per-file <code>files.get_or_register</code>, all in
+    one transaction. A disk-validation error on any file rolls back the
+    sample and its metadata too.</li>
+<li>Both workflows take an optional <code>cur=None</code>; when None they open their
+  own <code>transaction()</code>, otherwise they piggyback on the caller's cursor
+  via <code>contextlib.nullcontext</code>, so they compose cleanly inside a larger
+  atomic block.</li>
+</ul>
+<h2 id="021-2026-05-11">[0.2.1] - 2026-05-11<a class="headerlink" href="#021-2026-05-11" title="Permanent link">&para;</a></h2>
+<h3 id="added_9">Added<a class="headerlink" href="#added_9" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Composite read-only <code>queries</code> module in <code>noxdb</code>:</li>
+<li><code>samples_for_project</code> — join <code>projects → subjects → visits → samples</code>
+    with optional filters on <code>file_type</code>, <code>sample_type</code>, and <code>has_files</code>.</li>
+<li><code>samples_with_metadata</code> / <code>project_tidy_table</code> — EAV pivot from
+    <code>sample_metadata</code> (and optionally <code>visit_metadata</code>) into a wide-form
+    <code>pandas.DataFrame</code>. Visit-level keys colliding with sample-level keys
+    are renamed with a <code>visit_</code> prefix. Metadata key names are filtered
+    against <code>^[A-Za-z_][A-Za-z0-9_]*$</code> for safe DataFrame columns.</li>
+<li><code>files_for_project</code> — <code>sample_files</code> joined with parent identifiers,
+    filtered by <code>file_type</code> and/or <code>storage_tier</code>.</li>
+<li><code>project_summary</code> — counts of subjects/visits/samples/files plus
+    per-<code>file_type</code> breakdown (returns a <code>dict</code>, no pandas dependency).</li>
+<li><code>find_db_files_missing_on_disk</code> — DB rows whose <code>file_path</code> is gone
+    from disk; suitable for a cron sweep.</li>
+<li><code>find_disk_files_missing_in_db</code> — regular files under
+    <code>NOXDB_ARCHIVE_ROOT</code> / <code>NOXDB_WORK_ROOT</code> (or caller-provided roots)
+    that are not registered in <code>sample_files</code>.</li>
+<li><code>integrity_check</code> — per-project report covering samples without files,
+    archive files without MD5, and files outside their tier root.</li>
+<li><code>analysis</code> optional-dependency group in <code>pyproject.toml</code> for
+  <code>pandas</code> + <code>openpyxl</code>. Tests depend on <code>pandas</code> and skip DataFrame
+  assertions when it is missing.</li>
+</ul>
+<h2 id="020-2026-05-09">[0.2.0] - 2026-05-09<a class="headerlink" href="#020-2026-05-09" title="Permanent link">&para;</a></h2>
+<h3 id="added_10">Added<a class="headerlink" href="#added_10" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Per-table CRUD modules in <code>noxdb</code>:</li>
+<li><code>projects</code> — <code>create</code>, <code>get</code>, <code>get_by_name</code>, <code>get_or_create</code>, <code>list_all</code>,
+    <code>update</code>, <code>delete</code>, <code>exists</code> (id/name XOR), <code>count</code>.</li>
+<li><code>subjects</code> — same shape keyed on the composite <code>(project_id,
+    subject_code)</code>, plus <code>list_for_project</code> / <code>count_for_project</code>.</li>
+<li><code>visits</code> — keyed on <code>(subject_id, timepoint)</code>; <code>get_or_create</code> rejects
+    NULL timepoints because the UNIQUE doesn't deduplicate them.</li>
+<li><code>samples</code> — <code>sample_name</code> is globally UNIQUE; module mirrors the
+    <code>projects</code> shape with <code>list_for_visit</code> / <code>count_for_visit</code>.</li>
+<li><code>metadata</code> — shared EAV wrapper for <code>visit_metadata</code> and
+    <code>sample_metadata</code> with explicit <code>set_visit / get_visit /
+    list_for_visit / delete_visit</code> (and <code>_sample</code> mirrors). Idempotent
+    via <code>INSERT … ON DUPLICATE KEY UPDATE</code>; <code>set_*</code> returns
+    <code>"inserted" | "updated" | "unchanged"</code>. Bool stored in BOOLEAN is
+    coerced back to Python <code>bool</code> on read.</li>
+<li><code>files</code> — filesystem-validating registration for <code>sample_files</code>:
+    absolute path + regular-file check, fastq/bam extension validation,
+    file-type → tier derivation (archive vs work), <code>os.path.realpath</code>
+    prefix check that blocks symlink escapes and sibling-prefix paths,
+    optional chunked MD5 (<code>compute_md5</code>) or caller-supplied checksum,
+    <code>register</code>, <code>get_or_register</code> (idempotent on <code>file_path</code> and
+    UNIQUE-violation race-safe), <code>restat</code>, plus the standard CRUD
+    helpers. Roots configurable via <code>NOXDB_ARCHIVE_ROOT</code> /
+    <code>NOXDB_WORK_ROOT</code> (defaults <code>/lisc/archive</code>, <code>/lisc/work</code>).</li>
+<li><code>update(storage_tier=…)</code> enforces the same <code>file_type → tier</code>
+    invariant as <code>register()</code> — flipping <code>archive</code> ↔ <code>work</code> is rejected;
+    <code>scratch</code> / <code>external</code> overrides are still allowed.</li>
+</ul>
+<h3 id="changed_7">Changed<a class="headerlink" href="#changed_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li>CI now runs <code>pytest --cov</code> against <code>src/noxdb</code> (branch
+  coverage), prints a missing-lines report in the workflow log, and
+  uploads <code>coverage.xml</code> as a build artifact. <code>pytest-cov</code> is a new
+  optional <code>test</code> dependency; coverage settings live under
+  <code>[tool.coverage.*]</code> in <code>pyproject.toml</code>.</li>
+<li><code>_LoggingCursor</code> and <code>execute()</code> pass <code>params</code> through unchanged when
+  the caller provides an empty container; only <code>params is None</code> is
+  substituted with <code>()</code>.</li>
+<li><code>_log_if_write</code> now strips leading SQL comments and an optional
+  <code>WITH …</code> CTE before classifying the statement, so audited writes are
+  no longer missed when the query starts with comments or a CTE.</li>
+<li><code>get_connection()</code> cleanup wraps <code>rollback()</code> and <code>close()</code> in their
+  own try/except so the original DB exception is preserved; rollback /
+  close failures are logged instead of masking it.</li>
+</ul>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>seed/load_fake_data.load()</code> now closes its cursor in a <code>try/finally</code>,
+  preventing cursor leaks back into the pool.</li>
+<li><code>.github/workflows/pr-checks.yml</code> version-extraction commands no
+  longer abort the step on <code>grep</code> misses; the explicit <code>-z</code> guard now
+  reports the error as intended.</li>
+</ul>
+<h2 id="011-2026-05-08">[0.1.1] - 2026-05-08<a class="headerlink" href="#011-2026-05-08" title="Permanent link">&para;</a></h2>
+<h3 id="added_11">Added<a class="headerlink" href="#added_11" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Initial schema in <code>schema/001_initial.sql</code>: project → subject → visit →
+  sample hierarchy with EAV metadata tables (<code>visit_metadata</code>,
+  <code>sample_metadata</code>) and <code>sample_files</code> for tracking file pointers.</li>
+<li>User and role definitions in <code>users/users.sql</code> (admin / read-write /
+  read-only tiers, restricted to <code>lisc.%</code> hosts).</li>
+<li><code>noxdb</code> Python package with:</li>
+<li>Connection pool (<code>init_pool</code>, <code>close_pool</code>, <code>get_connection</code>).</li>
+<li><code>transaction()</code> context manager with audit-logging cursor wrapper.</li>
+<li><code>execute()</code> helper returning rows as <code>list[dict]</code>.</li>
+<li>Audit log of write statements at <code>~/.noxdb/audit.log</code> (override via
+    <code>NOXDB_AUDIT_LOG</code>).</li>
+<li>Credentials read from <code>~/.my.cnf</code> <code>[noxdb]</code> section by default;
+    overridable per-call via <code>init_pool(...)</code> keyword arguments and via the
+    <code>NOXDB_DATABASE</code> env var.</li>
+<li>Fake-data seed script (<code>seed/load_fake_data.py</code>) covering all four EAV
+  value types and a longitudinal subject example.</li>
+<li>CI workflow running pytest against MariaDB 10.11.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.code.annotate", "content.action.edit", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

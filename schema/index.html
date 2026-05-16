@@ -1,0 +1,2238 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Schema, migrations, and Python tooling for the lab's MariaDB metadata database.">
+      
+      
+      
+        <link rel="canonical" href="https://polymerase3.github.io/noxdb/schema/">
+      
+      
+        <link rel="prev" href="../data-preparation/">
+      
+      
+        <link rel="next" href="../testing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Schema - noxDB</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#schema" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="noxDB" class="md-header__button md-logo" aria-label="noxDB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            noxDB
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Schema
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Polymerase3/noxdb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Polymerase3/noxdb
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../install/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../data-preparation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Preparing data
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Schema
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../testing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Testing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="noxDB" class="md-nav__button md-logo" aria-label="noxDB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    noxDB
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Polymerase3/noxdb" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Polymerase3/noxdb
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-preparation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparing data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#model-lineage-project-membership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model: lineage + project membership
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tables
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#projects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        projects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subjects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        subjects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        visits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        samples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project_samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        project_samples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visit_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        visit_metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sample_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sample_metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sample_files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sample_files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Controls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-controls-are-linked-to-projects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How controls are linked to projects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nulls-in-control-rows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nulls in control rows
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eav-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EAV metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#storage-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storage tiers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#naming-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-the-sql-lives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the SQL lives
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/connection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    connection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/projects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    projects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/subjects/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subjects
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/visits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    visits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/samples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    samples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/metadata/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/files/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/queries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    queries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/fetch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    fetch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/import/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project import
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#model-lineage-project-membership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model: lineage + project membership
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tables
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#projects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        projects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#subjects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        subjects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        visits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        samples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project_samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        project_samples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visit_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        visit_metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sample_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sample_metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sample_files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sample_files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controls
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Controls">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-controls-are-linked-to-projects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How controls are linked to projects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nulls-in-control-rows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nulls in control rows
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eav-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EAV metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#storage-tiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storage tiers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#naming-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-the-sql-lives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the SQL lives
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Polymerase3/noxdb/edit/main/docs/schema.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="schema">Schema<a class="headerlink" href="#schema" title="Permanent link">&para;</a></h1>
+<p>The database stores <strong>metadata and file pointers</strong> for biological
+samples. Bulk data (fastq, BAM, counts, etc.) lives on disk under
+<code>/lisc/archive</code> and <code>/lisc/work</code>; the database only knows where to
+find it.</p>
+<hr />
+<h2 id="model-lineage-project-membership">Model: lineage + project membership<a class="headerlink" href="#model-lineage-project-membership" title="Permanent link">&para;</a></h2>
+<p>Since migration <code>003_cross_project_samples</code> the data model has <strong>two
+independent axes</strong>:</p>
+<ul>
+<li><strong>Lineage</strong> (<code>subject → visit → sample</code>) — pure provenance, carries
+  <strong>no</strong> project affiliation:<ul>
+<li><strong>subject</strong> — one person / donor. Stable attributes only (<code>sex</code>,
+  <code>origin</code>). <code>subject_code</code> is <strong>globally unique</strong> (no longer scoped
+  to a project). <code>sex</code> is nullable for control subjects.</li>
+<li><strong>visit</strong> — one timepoint / collection event for a subject.
+  Time-varying clinical metadata (<code>age</code>, <code>group_test</code>, <code>timepoint</code>)
+  goes here. <code>age</code> is nullable for control visits.</li>
+<li><strong>sample</strong> — one physical sample / library / Ig-class measurement
+  attached to a visit. <code>sample_name</code> is globally unique.</li>
+</ul>
+</li>
+<li><strong>Project membership</strong> (<code>project_samples</code>) — a many-to-many junction
+  that is the <strong>sole source of truth</strong> for which samples belong to
+  which project. One sample can belong to several projects (shared
+  plate controls, shared HC cohorts); a project is just a named set of
+  samples.</li>
+</ul>
+<p>Flexible typed key/value metadata can be attached to visits
+(<code>visit_metadata</code>) and samples (<code>sample_metadata</code>). File paths are
+tracked in <code>sample_files</code>.</p>
+<hr />
+<h2 id="tables">Tables<a class="headerlink" href="#tables" title="Permanent link">&para;</a></h2>
+<h3 id="projects"><code>projects</code><a class="headerlink" href="#projects" title="Permanent link">&para;</a></h3>
+<p>Top-level study or dataset. A project owns no rows directly — its
+samples are attached through the <a href="#project_samples"><code>project_samples</code></a>
+junction. The <code>input</code> project is kept as an umbrella for input-DNA
+controls; the old <code>mockIP</code> / <code>anchor</code> / <code>NC</code> projects were removed in
+migration <code>003</code> — see <a href="#controls">Controls</a> below.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Nullable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project_id</code></td>
+<td><code>BIGINT UNSIGNED</code> PK AI</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td><code>project_name</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>NO</td>
+<td>UNIQUE</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td><code>TEXT</code></td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td><code>pi_name</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>NO</td>
+<td>DEFAULT <code>CURRENT_TIMESTAMP</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="subjects"><code>subjects</code><a class="headerlink" href="#subjects" title="Permanent link">&para;</a></h3>
+<p>One row per person / donor. Stable subject-level attributes only —
+<strong>no project affiliation</strong> (membership lives in <code>project_samples</code>,
+reached via the sample → visit → subject lineage).</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Nullable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subject_id</code></td>
+<td><code>BIGINT UNSIGNED</code> PK AI</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td><code>subject_code</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>NO</td>
+<td><strong>Globally UNIQUE</strong> (<code>uq_subjects_subject_code</code>)</td>
+</tr>
+<tr>
+<td><code>sex</code></td>
+<td><code>CHAR(1)</code></td>
+<td>YES</td>
+<td><code>'M'</code> or <code>'F'</code> when set; NULL for control subjects</td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>NO</td>
+<td>DEFAULT <code>CURRENT_TIMESTAMP</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>sex</code> was made nullable in migration <code>002_controls_support</code> to
+accommodate control rows that have no biological donor. Migration
+<code>003_cross_project_samples</code> dropped <code>subjects.project_id</code> and replaced
+the old per-project <code>(project_id, subject_code)</code> key with a global
+UNIQUE on <code>subject_code</code> — a subject is now the same subject regardless
+of which study references it. <code>subjects.get_or_create</code> raises if a
+reused <code>subject_code</code> arrives with a conflicting <code>sex</code>/<code>origin</code>, so an
+accidental cross-study collision fails loudly instead of silently
+merging two donors.</p>
+<hr />
+<h3 id="visits"><code>visits</code><a class="headerlink" href="#visits" title="Permanent link">&para;</a></h3>
+<p>One row per subject × timepoint / collection event. Time-varying clinical data belongs here.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Nullable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>visit_id</code></td>
+<td><code>BIGINT UNSIGNED</code> PK AI</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td><code>subject_id</code></td>
+<td><code>BIGINT UNSIGNED</code> FK</td>
+<td>NO</td>
+<td>→ <code>subjects.subject_id</code> CASCADE</td>
+</tr>
+<tr>
+<td><code>timepoint</code></td>
+<td><code>VARCHAR(50)</code></td>
+<td>YES</td>
+<td>UNIQUE within subject: <code>(subject_id, timepoint)</code>; NULL rows not deduplicated</td>
+</tr>
+<tr>
+<td><code>group_test</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>NO</td>
+<td>Clinical group / arm (e.g. <code>Controls</code>, <code>Cases</code>)</td>
+</tr>
+<tr>
+<td><code>age</code></td>
+<td><code>INT</code></td>
+<td>YES</td>
+<td>Age at collection; ≥ 0 when set; NULL for control visits</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>NO</td>
+<td>DEFAULT <code>CURRENT_TIMESTAMP</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>age</code> was made nullable in migration <code>002_controls_support</code>.</p>
+<hr />
+<h3 id="samples"><code>samples</code><a class="headerlink" href="#samples" title="Permanent link">&para;</a></h3>
+<p>One row per physical sample / library / Ig-class measurement. <code>sample_name</code> is globally unique across all projects.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Nullable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sample_id</code></td>
+<td><code>BIGINT UNSIGNED</code> PK AI</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td><code>visit_id</code></td>
+<td><code>BIGINT UNSIGNED</code> FK</td>
+<td>NO</td>
+<td>→ <code>visits.visit_id</code> CASCADE</td>
+</tr>
+<tr>
+<td><code>sample_name</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>NO</td>
+<td>UNIQUE globally</td>
+</tr>
+<tr>
+<td><code>sample_type</code></td>
+<td><code>ENUM('sample','mockIP','input','anchor','NC')</code></td>
+<td>NO</td>
+<td>See <a href="#controls">Controls</a></td>
+</tr>
+<tr>
+<td><code>SQR</code></td>
+<td><code>VARCHAR(10)</code></td>
+<td>NO</td>
+<td>Sequencing run — plate-level key (canonicalized)</td>
+</tr>
+<tr>
+<td><code>SQRP</code></td>
+<td><code>VARCHAR(10)</code></td>
+<td>NO</td>
+<td>Plate within the run — plate-level key (canonicalized)</td>
+</tr>
+<tr>
+<td><code>library</code></td>
+<td><code>VARCHAR(50)</code></td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td><code>antibody_class</code></td>
+<td><code>VARCHAR(50)</code></td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>NO</td>
+<td>DEFAULT <code>CURRENT_TIMESTAMP</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>NC</code> was added to the <code>sample_type</code> ENUM in migration <code>002_controls_support</code>.</p>
+<p><code>SQR</code> / <code>SQRP</code> are <strong>plate coordinates</strong> matched by exact string
+equality (control auto-linking, project-scoped queries, the <code>003</code>
+backfill). To stop formatting drift from silently breaking that match,
+every write goes through one canonicalization chokepoint
+(<a class="autorefs autorefs-internal" title="            canonical_plate_id" href="../reference/samples/#noxdb.samples.canonical_plate_id"><code>samples.canonical_plate_id</code></a>):
+surrounding whitespace is stripped and the "absent" sentinels (<code>NA</code>,
+<code>N/A</code>, empty) collapse to a single canonical empty string. Zero-padding
+(e.g. <code>01</code>) is <strong>preserved</strong> — it is the canonical shape in this
+dataset, not noise. The importer validates and reports any value it
+normalizes; migration <code>003</code> canonicalizes pre-existing rows before the
+control backfill runs.</p>
+<hr />
+<h3 id="project_samples"><code>project_samples</code><a class="headerlink" href="#project_samples" title="Permanent link">&para;</a></h3>
+<p>Many-to-many junction between <code>projects</code> and <code>samples</code> — the <strong>sole
+source of truth</strong> for project membership (added in migration
+<code>003_cross_project_samples</code>). A sample with no row here belongs to no
+project and is invisible to every project-scoped query.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Nullable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project_id</code></td>
+<td><code>BIGINT UNSIGNED</code> FK</td>
+<td>NO</td>
+<td>→ <code>projects.project_id</code> CASCADE</td>
+</tr>
+<tr>
+<td><code>sample_id</code></td>
+<td><code>BIGINT UNSIGNED</code> FK</td>
+<td>NO</td>
+<td>→ <code>samples.sample_id</code> CASCADE</td>
+</tr>
+</tbody>
+</table>
+<p>Primary key is the composite <code>(project_id, sample_id)</code>, so a link is
+idempotent; an extra index on <code>sample_id</code> serves the reverse lookup.
+Both foreign keys are <code>ON DELETE CASCADE</code>: deleting a project drops its
+membership rows (the samples and their lineage survive), and deleting a
+sample drops all of its links.</p>
+<p>Write through <a class="autorefs autorefs-internal" title="            link_to_project" href="../reference/samples/#noxdb.samples.link_to_project"><code>samples.link_to_project</code></a>
+(<code>INSERT IGNORE</code>). The importer links every imported sample to its
+project and additionally auto-links plate controls (see
+<a href="#controls">Controls</a>).</p>
+<hr />
+<h3 id="visit_metadata"><code>visit_metadata</code><a class="headerlink" href="#visit_metadata" title="Permanent link">&para;</a></h3>
+<p>EAV (Entity-Attribute-Value) typed key/value pairs attached to a visit. Examples: BMI, smoker status, disease activity, treatment status.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Nullable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT UNSIGNED</code> PK AI</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td><code>visit_id</code></td>
+<td><code>BIGINT UNSIGNED</code> FK</td>
+<td>NO</td>
+<td>→ <code>visits.visit_id</code> CASCADE</td>
+</tr>
+<tr>
+<td><code>key_name</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>NO</td>
+<td>UNIQUE within visit: <code>(visit_id, key_name)</code></td>
+</tr>
+<tr>
+<td><code>value_int</code></td>
+<td><code>INTEGER</code></td>
+<td>YES</td>
+<td>Set when <code>value_type = 'int'</code></td>
+</tr>
+<tr>
+<td><code>value_numeric</code></td>
+<td><code>DECIMAL(20,6)</code></td>
+<td>YES</td>
+<td>Set when <code>value_type = 'numeric'</code></td>
+</tr>
+<tr>
+<td><code>value_bool</code></td>
+<td><code>BOOLEAN</code></td>
+<td>YES</td>
+<td>Set when <code>value_type = 'bool'</code></td>
+</tr>
+<tr>
+<td><code>value_text</code></td>
+<td><code>TEXT</code></td>
+<td>YES</td>
+<td>Set when <code>value_type = 'text'</code></td>
+</tr>
+<tr>
+<td><code>value_type</code></td>
+<td><code>ENUM('int','numeric','bool','text')</code></td>
+<td>NO</td>
+<td>Discriminator; exactly one value column is non-NULL (enforced by CHECK)</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>NO</td>
+<td>DEFAULT <code>CURRENT_TIMESTAMP</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="sample_metadata"><code>sample_metadata</code><a class="headerlink" href="#sample_metadata" title="Permanent link">&para;</a></h3>
+<p>EAV typed key/value pairs attached to a sample. Examples: well position, plate barcode, dilution factor, <code>passed_qc</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Nullable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>BIGINT UNSIGNED</code> PK AI</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td><code>sample_id</code></td>
+<td><code>BIGINT UNSIGNED</code> FK</td>
+<td>NO</td>
+<td>→ <code>samples.sample_id</code> CASCADE</td>
+</tr>
+<tr>
+<td><code>key_name</code></td>
+<td><code>VARCHAR(100)</code></td>
+<td>NO</td>
+<td>UNIQUE within sample: <code>(sample_id, key_name)</code></td>
+</tr>
+<tr>
+<td><code>value_int</code></td>
+<td><code>INTEGER</code></td>
+<td>YES</td>
+<td>Set when <code>value_type = 'int'</code></td>
+</tr>
+<tr>
+<td><code>value_numeric</code></td>
+<td><code>DECIMAL(20,6)</code></td>
+<td>YES</td>
+<td>Set when <code>value_type = 'numeric'</code></td>
+</tr>
+<tr>
+<td><code>value_bool</code></td>
+<td><code>BOOLEAN</code></td>
+<td>YES</td>
+<td>Set when <code>value_type = 'bool'</code></td>
+</tr>
+<tr>
+<td><code>value_text</code></td>
+<td><code>TEXT</code></td>
+<td>YES</td>
+<td>Set when <code>value_type = 'text'</code></td>
+</tr>
+<tr>
+<td><code>value_type</code></td>
+<td><code>ENUM('int','numeric','bool','text')</code></td>
+<td>NO</td>
+<td>Discriminator; exactly one value column is non-NULL (enforced by CHECK)</td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>NO</td>
+<td>DEFAULT <code>CURRENT_TIMESTAMP</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="sample_files"><code>sample_files</code><a class="headerlink" href="#sample_files" title="Permanent link">&para;</a></h3>
+<p>File pointers registered for a sample. The database never stores file content — only the absolute path and optional metadata.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Nullable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>file_id</code></td>
+<td><code>BIGINT UNSIGNED</code> PK AI</td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td><code>sample_id</code></td>
+<td><code>BIGINT UNSIGNED</code> FK</td>
+<td>NO</td>
+<td>→ <code>samples.sample_id</code> RESTRICT on delete</td>
+</tr>
+<tr>
+<td><code>file_type</code></td>
+<td><code>ENUM('fastq_r1','fastq_r2','fastq_single','bam','counts','beer_norm','zigp_norm','edger_norm')</code></td>
+<td>NO</td>
+<td></td>
+</tr>
+<tr>
+<td><code>file_path</code></td>
+<td><code>VARCHAR(1024)</code></td>
+<td>NO</td>
+<td>UNIQUE globally; must be absolute (enforced by CHECK <code>LIKE '/%'</code>)</td>
+</tr>
+<tr>
+<td><code>file_size_bytes</code></td>
+<td><code>BIGINT UNSIGNED</code></td>
+<td>YES</td>
+<td></td>
+</tr>
+<tr>
+<td><code>checksum_md5</code></td>
+<td><code>CHAR(32)</code></td>
+<td>YES</td>
+<td>Must match <code>^[a-f0-9]{32}$</code> when set</td>
+</tr>
+<tr>
+<td><code>storage_tier</code></td>
+<td><code>ENUM('work','archive','scratch','external')</code></td>
+<td>NO</td>
+<td>DEFAULT <code>'work'</code>; see <a href="#storage-tiers">Storage tiers</a></td>
+</tr>
+<tr>
+<td><code>created_at</code></td>
+<td><code>TIMESTAMP</code></td>
+<td>NO</td>
+<td>DEFAULT <code>CURRENT_TIMESTAMP</code></td>
+</tr>
+</tbody>
+</table>
+<p>Deleting a sample that still has files is rejected (<code>ON DELETE RESTRICT</code>). Files must be deregistered first.</p>
+<hr />
+<h2 id="controls">Controls<a class="headerlink" href="#controls" title="Permanent link">&para;</a></h2>
+<p>Control samples (mockIP, anchor, NC, input) have <strong>no project of their
+own</strong>. Migration <code>003_cross_project_samples</code> deleted the dedicated
+<code>mockIP</code> / <code>anchor</code> / <code>NC</code> projects; only <code>input</code> survives as an
+umbrella for input-DNA controls. A control is a normal <code>samples</code> row
+(with its own subject/visit lineage) linked into the relevant projects
+through <a href="#project_samples"><code>project_samples</code></a> like any other sample.</p>
+<h3 id="how-controls-are-linked-to-projects">How controls are linked to projects<a class="headerlink" href="#how-controls-are-linked-to-projects" title="Permanent link">&para;</a></h3>
+<p>A control is linked to <strong>every study project whose real samples share
+its plate</strong>, identified by the canonical <code>SQR</code> + <code>SQRP</code> coordinates
+that every sample row carries. This link is materialized into
+<code>project_samples</code>, not computed at query time:</p>
+<ul>
+<li><strong>At import</strong> — the importer links each imported sample to its
+  project, then auto-links any existing control (mockIP/anchor/NC)
+  whose <code>SQR</code>+<code>SQRP</code> matches a real (<code>sample</code>-type) row in the bundle.</li>
+<li><strong>For historical data</strong> — migration <code>003</code>'s Backfill 3 inserts the
+  same control→study-project links for every plate-sharing project.</li>
+</ul>
+<p>Because one plate can span several study projects, the same physical
+control is linked to several projects — that is the many-to-many
+relationship working as intended, with exactly one underlying sample
+row. <code>queries.controls_for_project</code> is then a plain <code>project_samples</code>
+scan filtered to the control <code>sample_type</code>s, and
+<code>queries.samples_for_project</code> returns controls because they are simply
+project members.</p>
+<h3 id="nulls-in-control-rows">Nulls in control rows<a class="headerlink" href="#nulls-in-control-rows" title="Permanent link">&para;</a></h3>
+<p>Control subjects have no biological donor, so <code>subjects.sex</code> and <code>visits.age</code> are NULL for all control rows. The non-null CHECK constraints on both columns were loosened in migration <code>002_controls_support</code> to permit this:</p>
+<ul>
+<li><code>subjects.sex</code>: NULL or <code>'M'</code>/<code>'F'</code></li>
+<li><code>visits.age</code>: NULL or <code>&gt;= 0</code></li>
+</ul>
+<hr />
+<h2 id="eav-metadata">EAV metadata<a class="headerlink" href="#eav-metadata" title="Permanent link">&para;</a></h2>
+<p><code>visit_metadata</code> and <code>sample_metadata</code> follow the
+<a href="https://en.wikipedia.org/wiki/Entity%E2%80%93attribute%E2%80%93value_model">Entity-Attribute-Value</a>
+pattern: each row stores one <code>(key_name, value)</code> pair for one entity.
+Exactly one of <code>value_int</code>, <code>value_numeric</code>, <code>value_bool</code>, <code>value_text</code> is non-NULL per row — <code>value_type</code> says which. A CHECK constraint enforces this.</p>
+<p>Use <a class="autorefs autorefs-internal" title="            set_visit" href="../reference/metadata/#noxdb.metadata.set_visit"><code>metadata.set_visit</code></a> /
+<a class="autorefs autorefs-internal" title="            set_sample" href="../reference/metadata/#noxdb.metadata.set_sample"><code>metadata.set_sample</code></a> for writes; they are
+idempotent (<code>INSERT … ON DUPLICATE KEY UPDATE</code>) and return
+<code>"inserted" | "updated" | "unchanged"</code>.</p>
+<p>To get metadata back as wide-form columns, use
+<a class="autorefs autorefs-internal" title="            samples_with_metadata" href="../reference/queries/#noxdb.queries.samples_with_metadata"><code>queries.samples_with_metadata</code></a>
+or <a class="autorefs autorefs-internal" title="            project_tidy_table" href="../reference/queries/#noxdb.queries.project_tidy_table"><code>queries.project_tidy_table</code></a>.</p>
+<hr />
+<h2 id="storage-tiers">Storage tiers<a class="headerlink" href="#storage-tiers" title="Permanent link">&para;</a></h2>
+<p><code>sample_files.storage_tier</code> enforces a <code>file_type → tier</code> invariant:</p>
+<table>
+<thead>
+<tr>
+<th><code>file_type</code></th>
+<th>Required tier</th>
+<th>Root env var</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fastq_r1</code>, <code>fastq_r2</code>, <code>fastq_single</code>, <code>bam</code></td>
+<td><code>archive</code></td>
+<td><code>NOXDB_ARCHIVE_ROOT</code></td>
+<td><code>/lisc/archive</code></td>
+</tr>
+<tr>
+<td><code>counts</code>, <code>beer_norm</code>, <code>zigp_norm</code>, <code>edger_norm</code></td>
+<td><code>work</code></td>
+<td><code>NOXDB_WORK_ROOT</code></td>
+<td><code>/lisc/work</code></td>
+</tr>
+<tr>
+<td>anything</td>
+<td><code>scratch</code>, <code>external</code></td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Flipping <code>archive</code> ↔ <code>work</code> on an existing row is rejected by
+<a class="autorefs autorefs-internal" title="            update" href="../reference/files/#noxdb.files.update"><code>files.update</code></a>. <code>scratch</code> / <code>external</code> overrides
+are still allowed for one-off cases.</p>
+<hr />
+<h2 id="naming-conventions">Naming conventions<a class="headerlink" href="#naming-conventions" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Tables</strong>: plural <code>snake_case</code> (<code>projects</code>, <code>samples</code>, <code>sample_files</code>).</li>
+<li><strong>Primary keys</strong>: <code>&lt;table_singular&gt;_id</code> (e.g. <code>subject_id</code>); EAV tables use plain <code>id</code>.</li>
+<li><strong>Foreign keys</strong>: reuse the parent PK name (e.g. <code>visits.subject_id</code>, <code>project_samples.project_id</code>).</li>
+<li><strong>Migrations</strong>: <code>schema/NNN_description.sql</code>, numbered and append-only. Never edit a merged migration — add the next number.</li>
+<li><strong>Stored file paths</strong> must be absolute. Enforced by a CHECK constraint and re-validated in <a class="autorefs autorefs-internal" title="            register" href="../reference/files/#noxdb.files.register"><code>files.register</code></a>.</li>
+</ul>
+<hr />
+<h2 id="where-the-sql-lives">Where the SQL lives<a class="headerlink" href="#where-the-sql-lives" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>schema/001_initial.sql</code> — initial schema.</li>
+<li><code>schema/002_controls_support.sql</code> — nullable <code>sex</code>/<code>age</code> for control rows; adds <code>NC</code> to <code>sample_type</code> ENUM.</li>
+<li><code>schema/003_cross_project_samples.sql</code> — adds the <code>project_samples</code> junction; drops <code>subjects.project_id</code> (global UNIQUE on <code>subject_code</code>); canonicalizes <code>SQR</code>/<code>SQRP</code>; backfills study/input/control membership; deletes the <code>mockIP</code>/<code>anchor</code>/<code>NC</code> projects.</li>
+<li><code>users/users.sql</code> — role and privilege definitions (the matching <code>users_with_passwords.sql</code> is gitignored).</li>
+<li><code>seed/load_fake_data.py</code> — fake-data seed covering all four EAV value types and a longitudinal subject example.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.code.annotate", "content.action.edit", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
