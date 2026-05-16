@@ -23,7 +23,8 @@ stores **metadata and file pointers**; bulk data lives on disk.
 -   :material-database:{ .lg .middle } **[Schema](schema.md)**
 
     ---
-    The `project → subject → visit → sample` hierarchy, table layout,
+    The `subject → visit → sample` lineage, the `project_samples`
+    membership junction, table layout,
     and naming conventions.
 
 -   :material-table-edit:{ .lg .middle } **[Preparing data](data-preparation.md)**
@@ -53,22 +54,26 @@ stores **metadata and file pointers**; bulk data lives on disk.
 
 </div>
 
-## Hierarchy
+## Model
+
+Two independent axes (since migration `003_cross_project_samples`):
 
 ```
-project ──┬── subject ──┬── visit ──── sample ──── sample_files
-          │             │                │
-          │             │                └── sample_metadata (EAV)
-          │             │
-          │             └── (subject is stable: sex, origin)
-          │
-          └── visit_metadata (EAV, attached to visit)
+lineage:     subject ──┬── visit ──── sample ──┬── sample_files
+                        │              │        └── sample_metadata (EAV)
+                        │              │
+                        │              └── (subject is stable: sex, origin)
+                        └── visit_metadata (EAV, attached to visit)
+
+membership:  project ──< project_samples >── sample   (many-to-many)
 ```
 
-- **project** — independent study or dataset.
-- **subject** — one person/donor within a project. Stable attributes only.
-- **visit** — one timepoint / collection event. Time-varying clinical metadata.
-- **sample** — one physical sample / library / Ig-class measurement.
+- **subject → visit → sample** — pure lineage / provenance, with **no
+  project affiliation**.
+- **project** — a named set of samples; owns no rows directly.
+- **project_samples** — the many-to-many junction that is the sole
+  source of truth for which samples belong to which project (one
+  sample can belong to several — e.g. shared plate controls).
 
 See [Schema](schema.md) for the full breakdown.
 

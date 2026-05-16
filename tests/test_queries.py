@@ -54,17 +54,18 @@ def populated_project(_init_pool):
         wipe_all(cur)
         # Second project to make sure queries scope correctly.
         other_pid = projects.create(cur, "OTHER")
-        other_sid = subjects.create(cur, other_pid, "OS1", "M")
+        other_sid = subjects.create(cur, "OS1", "M")
         other_vid = visits.create(cur, other_sid, "ctrl", 20, timepoint="t0")
-        samples.create(
+        other_smp = samples.create(
             cur, other_vid, "OTHER_S1", "sample", "X", "X", "libX",
             antibody_class="IgG",
         )
+        samples.link_to_project(cur, other_pid, other_smp)
 
         pid = projects.create(cur, "QPROJ", pi_name="Dr. Q")
 
-        sa = subjects.create(cur, pid, "SUBJ_A", "M", origin="PL")
-        sb = subjects.create(cur, pid, "SUBJ_B", "F", origin="AT")
+        sa = subjects.create(cur, "SUBJ_A", "M", origin="PL")
+        sb = subjects.create(cur, "SUBJ_B", "F", origin="AT")
 
         va_b = visits.create(cur, sa, "ctrl", 30, timepoint="baseline")
         va_m3 = visits.create(cur, sa, "ctrl", 31, timepoint="m3")
@@ -83,6 +84,9 @@ def populated_project(_init_pool):
                             antibody_class="IgM")
         b1 = samples.create(cur, vb_b, "SAMP_B1", "sample", "Q3", "Q3", "libB",
                             antibody_class="IgG")
+
+        for _smp in (a1, a2, a3, b1):
+            samples.link_to_project(cur, pid, _smp)
 
         metadata.set_sample(cur, a1, "well_position", "A01")
         metadata.set_sample(cur, a1, "passed_qc", True)
@@ -340,9 +344,10 @@ def test_samples_with_metadata_collision_prefixed_visit(_init_pool):
     with transaction() as cur:
         wipe_all(cur)
         pid = projects.create(cur, "CPROJ")
-        sa = subjects.create(cur, pid, "S", "F")
+        sa = subjects.create(cur, "S", "F")
         vid = visits.create(cur, sa, "ctrl", 20, timepoint="t")
         sid = samples.create(cur, vid, "SS", "sample", "X", "X", "libX")
+        samples.link_to_project(cur, pid, sid)
         metadata.set_visit(cur, vid, "shared", "from_visit")
         metadata.set_sample(cur, sid, "shared", "from_sample")
         df = queries.samples_with_metadata(cur, pid)

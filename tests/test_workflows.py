@@ -62,7 +62,6 @@ def fake_tier_roots(tmp_path, monkeypatch):
 
 def test_register_subject_with_visit_creates_both(project):
     sid, vid = workflows.register_subject_with_visit(
-        project_id=project,
         subject_code="S1", sex="F", origin="PL",
         timepoint="baseline", group_test="ctrl", age=30,
     )
@@ -78,7 +77,6 @@ def test_register_subject_with_visit_creates_both(project):
 
 def test_register_subject_with_visit_writes_metadata(project):
     sid, vid = workflows.register_subject_with_visit(
-        project_id=project,
         subject_code="SM", sex="M",
         timepoint="t0", group_test="tx", age=22,
         visit_metadata={"bmi": 24.1, "smoker": False, "stage": 3},
@@ -94,13 +92,11 @@ def test_register_subject_with_visit_writes_metadata(project):
 
 def test_register_subject_with_visit_idempotent_on_rerun(project):
     sid1, vid1 = workflows.register_subject_with_visit(
-        project_id=project,
         subject_code="IDEMP", sex="F",
         timepoint="t0", group_test="ctrl", age=30,
         visit_metadata={"bmi": 22.0},
     )
     sid2, vid2 = workflows.register_subject_with_visit(
-        project_id=project,
         subject_code="IDEMP", sex="F",
         timepoint="t0", group_test="ctrl", age=30,
         visit_metadata={"bmi": 22.5},  # updated value
@@ -124,15 +120,15 @@ def test_rollback_works_for_late_session_subjects_insert(project):
     with pytest.raises(RuntimeError, match="rollback regression"):
         with transaction() as cur:
             cur.execute(
-                "INSERT INTO subjects (project_id, subject_code, sex) "
-                "VALUES (?, ?, ?)",
-                (project, "DIAG_S", "F"),
+                "INSERT INTO subjects (subject_code, sex) "
+                "VALUES (?, ?)",
+                ("DIAG_S", "F"),
             )
             raise RuntimeError("rollback regression")
     rows = execute(
         "SELECT COUNT(*) AS n FROM subjects "
-        "WHERE project_id = ? AND subject_code = ?",
-        (project, "DIAG_S"),
+        "WHERE subject_code = ?",
+        ("DIAG_S",),
     )
     assert rows[0]["n"] == 0
 
@@ -141,7 +137,6 @@ def test_register_subject_with_visit_atomic_rollback_on_bad_metadata(project):
     """A bad metadata value (None) must roll back the subject+visit too."""
     with pytest.raises(ValueError):
         workflows.register_subject_with_visit(
-            project_id=project,
             subject_code="ROLLBACK_S", sex="F",
             timepoint="t0", group_test="ctrl", age=30,
             visit_metadata={"bmi": None},  # ValueError from _eav_split
@@ -152,8 +147,8 @@ def test_register_subject_with_visit_atomic_rollback_on_bad_metadata(project):
     # taken before the rollback fully propagated.
     rows = execute(
         "SELECT COUNT(*) AS n FROM subjects "
-        "WHERE project_id = ? AND subject_code = ?",
-        (project, "ROLLBACK_S"),
+        "WHERE subject_code = ?",
+        ("ROLLBACK_S",),
     )
     assert rows[0]["n"] == 0
 
@@ -168,7 +163,6 @@ def test_register_subject_with_visit_uses_provided_cursor(project):
         with transaction() as cur:
             workflows.register_subject_with_visit(
                 cur,
-                project_id=project,
                 subject_code="OUTER_ROLLBACK", sex="F",
                 timepoint="t0", group_test="ctrl", age=30,
             )
@@ -176,8 +170,8 @@ def test_register_subject_with_visit_uses_provided_cursor(project):
 
     rows = execute(
         "SELECT COUNT(*) AS n FROM subjects "
-        "WHERE project_id = ? AND subject_code = ?",
-        (project, "OUTER_ROLLBACK"),
+        "WHERE subject_code = ?",
+        ("OUTER_ROLLBACK",),
     )
     assert rows[0]["n"] == 0
 
@@ -194,7 +188,6 @@ def test_register_sample_with_files_happy_path(project, fake_tier_roots):
     norm.write_bytes(b"\x00")
 
     _sid, vid = workflows.register_subject_with_visit(
-        project_id=project,
         subject_code="SAMP_SUBJ", sex="F",
         timepoint="t0", group_test="ctrl", age=30,
     )
@@ -224,7 +217,6 @@ def test_register_sample_with_files_atomic_on_bad_file(project, fake_tier_roots)
     good.write_bytes(b"\x00")
 
     _sid, vid = workflows.register_subject_with_visit(
-        project_id=project,
         subject_code="RB_SUBJ", sex="F",
         timepoint="t0", group_test="ctrl", age=30,
     )
@@ -251,7 +243,6 @@ def test_register_sample_with_files_idempotent(project, fake_tier_roots):
     fq = archive / "idemp_R1.fastq.gz"
     fq.write_bytes(b"\x00")
     _sid, vid = workflows.register_subject_with_visit(
-        project_id=project,
         subject_code="IDEMP_SUBJ", sex="F",
         timepoint="t0", group_test="ctrl", age=30,
     )
@@ -293,7 +284,6 @@ def test_register_sample_with_files_composes_in_outer_transaction(
     with transaction() as cur:
         _sid, vid = workflows.register_subject_with_visit(
             cur,
-            project_id=project,
             subject_code="COMPOSE_SUBJ", sex="F",
             timepoint="t0", group_test="ctrl", age=30,
         )

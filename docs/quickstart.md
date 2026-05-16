@@ -119,11 +119,11 @@ with transaction() as cur:
 | 25         | HCC_MUW            | 150 + 30 (TKI therapy) + 78 HCs + 48 TKI-treated                        |
 | …          | …                  | …                                                                        |
 | 58         | input              | Control samples (input DNA)                                              |
-| 61         | mockIP             | Mock IP control samples                                                  |
-| 64         | anchor             | Anchor control samples                                                   |
-| 67         | NC                 | Negative control (NC) samples                                            |
 
-21 projects total (18 study projects + 3 control projects + input).
+18 projects total — 17 study projects + the `input` umbrella project.
+The dedicated `mockIP` / `anchor` / `NC` projects were removed in
+migration `003`; those controls are now linked to the study projects
+that share their plate (see [§11](#11-plate-controls-for-a-project)).
 
 ---
 
@@ -139,13 +139,13 @@ with transaction() as cur:
 ```json
 {
   "project_id": 7,
-  "n_subjects": 110,
-  "n_visits": 110,
-  "n_samples": 110,
-  "n_files": 220,
+  "n_subjects": 174,
+  "n_visits": 174,
+  "n_samples": 174,
+  "n_files": 348,
   "files_by_type": {
-    "counts": 110,
-    "zigp_norm": 110
+    "counts": 174,
+    "zigp_norm": 174
   },
   "n_controls": 64,
   "controls_by_type": {
@@ -156,18 +156,21 @@ with transaction() as cur:
 }
 ```
 
-`n_samples` counts only real patient/study samples. `n_controls` and
-`controls_by_type` show the plate controls (mockIP / anchor / NC) matched to
-this project via SQR + SQRP.
+`n_samples` counts **every** sample linked to the project via
+`project_samples`, controls included — here 110 study + 64 controls =
+174. `n_controls` / `controls_by_type` break out just the control
+subset (matched onto the project's plates by SQR + SQRP at import /
+migration time).
 
 ---
 
 ## 4. Samples for a project
 
-The main query for pulling all samples belonging to a project. Returns real
-samples joined with their plate controls (mockIP, anchor, NC) in a single
-flat `DataFrame`. Control rows carry their own `project_id` (e.g. 61 for
-mockIP) so they are always distinguishable.
+The main query for pulling all samples belonging to a project. Real
+samples and their plate controls (mockIP, anchor, NC) are all project
+members via `project_samples`, returned in one flat `DataFrame`. The
+`project_id` column is always the queried project (`7` for every row,
+controls included) — tell rows apart by `sample_type`.
 
 ```python
 with transaction() as cur:
@@ -178,7 +181,7 @@ with transaction() as cur:
 |------------|------------|------------------------------------|----------|-----------|-----------|------------------------------------|-------------|-----|------|---------|----------------|
 | 7          | 649        | R14P02_77_FAU0001_ADMCI_NED_A_T_C2 | 649      | baseline  | 649       | R14P02_77_FAU0001_ADMCI_NED_A_T_C2 | sample      | 07  | 02   | A_T_C2  | None           |
 | …          | …          | …                                  | …        | …         | …         | …                                  | …           | …   | …    | …       | …              |
-| 61         | 14926      | R14P02_81_Mock_1_A_T_C2            | 15838    | baseline  | 15838     | R14P02_81_Mock_1_A_T_C2            | mockIP      | 07  | 02   | A_T_C2  | None           |
+| 7          | 14926      | R14P02_81_Mock_1_A_T_C2            | 15838    | baseline  | 15838     | R14P02_81_Mock_1_A_T_C2            | mockIP      | 07  | 02   | A_T_C2  | None           |
 | …          | …          | …                                  | …        | …         | …         | …                                  | …           | …   | …    | …       | …              |
 
 174 rows total (110 `sample` + 32 `mockIP` + 16 `anchor` + 16 `NC`).
@@ -216,7 +219,6 @@ with transaction() as cur:
 ```json
 {
   "subject_id": 649,
-  "project_id": 7,
   "subject_code": "R14P02_77_FAU0001_ADMCI_NED_A_T_C2",
   "sex": "F",
   "origin": "Netherlands",
@@ -224,7 +226,10 @@ with transaction() as cur:
 }
 ```
 
-110 subjects in this project.
+174 subjects. `subjects` no longer carries a `project_id` (dropped in
+migration `003`); `list_for_project` now traverses
+`project_samples → samples → visits → subjects`, so every subject with
+a sample in the project — control subjects included — is returned.
 
 ---
 
@@ -289,7 +294,9 @@ with transaction() as cur:
 
 ## 9. Files for a project
 
-Returns files for the real study samples only (not controls).
+Returns every file registered for samples linked to the project —
+study samples **and** controls, since both are project members via
+`project_samples`.
 
 ```python
 with transaction() as cur:
@@ -302,15 +309,16 @@ with transaction() as cur:
 | 229     | 649       | R14P02_77_FAU0001_ADMCI_NED_A_T_C2 | R14P02_77_FAU0001_ADMCI_NED_A_T_C2 | baseline  | zigp_norm | /lisc/data/work/ccr/zigp/R14P02_77_FAU0001_ADMCI_NED_A_T_C2.csv             | None            | None         | work         | 2026-05-14 12:27:24 |
 | …       | …         | …                                  | …                                  | …         | …         | …                                                                            | …               | …            | …            | …                   |
 
-220 files total (110 `counts` + 110 `zigp_norm`).
+348 files total (174 `counts` + 174 `zigp_norm`).
 
 ---
 
 ## 10. Project tidy table
 
-A single wide DataFrame joining all levels (project → subject → visit →
-sample) with metadata pivoted into columns. Includes controls. The standard
-starting point for downstream analysis:
+A single wide DataFrame: the `subject → visit → sample` lineage joined
+to project membership (`project_samples`) with metadata pivoted into
+columns. Includes controls. The standard starting point for downstream
+analysis:
 
 ```python
 with transaction() as cur:
@@ -323,10 +331,13 @@ Shape: 174 rows × 12 columns.
 
 ## 11. Plate controls for a project
 
-Controls (mockIP, anchor, NC) are stored in their own dedicated projects and
-are matched back to a study project via SQR + SQRP. Because a plate can span
-multiple projects, the same control may appear for several projects — there is
-no duplication, just a shared reference.
+Controls (mockIP, anchor, NC) have no project of their own — they are
+linked to every study project sharing their plate through
+`project_samples` (done at import / migration time, matched by
+SQR + SQRP). Because a plate can span multiple projects the same
+control appears for several projects: one underlying row, many
+membership links. The `project_id` column is therefore the queried
+project.
 
 ```python
 with transaction() as cur:
@@ -342,8 +353,8 @@ mockIP    32
 
 | sample_id | sample_name              | sample_type | SQR | SQRP | library | project_id |
 |-----------|--------------------------|-------------|-----|------|---------|------------|
-| 15838     | R14P02_81_Mock_1_A_T_C2  | mockIP      | 07  | 02   | A_T_C2  | 61         |
-| 15841     | R14P02_82_Mock_2_A_T_C2  | mockIP      | 07  | 02   | A_T_C2  | 61         |
+| 15838     | R14P02_81_Mock_1_A_T_C2  | mockIP      | 07  | 02   | A_T_C2  | 7          |
+| 15841     | R14P02_82_Mock_2_A_T_C2  | mockIP      | 07  | 02   | A_T_C2  | 7          |
 | …         | …                        | …           | …   | …    | …       | …          |
 
 64 controls total (32 `mockIP` + 16 `anchor` + 16 `NC`).
@@ -439,13 +450,13 @@ finally:
 ```json
 {
   "project_id": 7,
-  "n_subjects": 110,
-  "n_visits": 110,
-  "n_samples": 110,
-  "n_files": 220,
+  "n_subjects": 174,
+  "n_visits": 174,
+  "n_samples": 174,
+  "n_files": 348,
   "files_by_type": {
-    "counts": 110,
-    "zigp_norm": 110
+    "counts": 174,
+    "zigp_norm": 174
   },
   "n_controls": 64,
   "controls_by_type": {
@@ -456,7 +467,7 @@ finally:
 }
 ```
 
-`dff` — first 6 rows of 220:
+`dff` — first 6 rows of 348:
 
 ```
  file_id                        sample_name file_type                                                              file_path storage_tier
@@ -497,7 +508,7 @@ Output directory layout:
 ```
 exports/ADMCI_NED/
 ├── README.txt     (209 bytes)
-└── metadata.csv   (18,892 bytes)
+└── metadata.csv   (18,828 bytes)
 ```
 
 `README.txt`:
@@ -509,14 +520,14 @@ Description: -
 Created: 2026-05-14 12:27:07
 
 Counts:
-  subjects: 110
-  visits:   110
-  samples:  110
-  files:    220
+  subjects: 174
+  visits:   174
+  samples:  174
+  files:    348
 
 Files by type:
-  counts: 110
-  zigp_norm: 110
+  counts: 174
+  zigp_norm: 174
 ```
 
 `result` (the return value):
@@ -524,7 +535,7 @@ Files by type:
 ```json
 {
   "project":  { "project_id": 7, "project_name": "ADMCI_NED", ... },
-  "summary":  { "n_subjects": 110, "n_files": 220, ... },
+  "summary":  { "n_subjects": 174, "n_files": 348, ... },
   "metadata": { "csv": "exports/ADMCI_NED/metadata.csv" },
   "readme":   "exports/ADMCI_NED/README.txt",
   "output_dir": "exports/ADMCI_NED"

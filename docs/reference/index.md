@@ -9,7 +9,7 @@ Every page below is auto-generated from the docstrings in
 |----------------------------------------------|-------------------------------------------------------------------------|
 | [`connection`](connection.md)                | Pool, `transaction()`, audit logging, SSH tunneling                     |
 | [`projects`](projects.md)                    | CRUD for `projects`                                                     |
-| [`subjects`](subjects.md)                    | CRUD for `subjects` (keyed on `(project_id, subject_code)`)             |
+| [`subjects`](subjects.md)                    | CRUD for `subjects` (keyed on globally-unique `subject_code`)           |
 | [`visits`](visits.md)                        | CRUD for `visits` (keyed on `(subject_id, timepoint)`)                  |
 | [`samples`](samples.md)                      | CRUD for `samples` (`sample_name` globally UNIQUE)                      |
 | [`metadata`](metadata.md)                    | EAV wrapper for `visit_metadata` and `sample_metadata`                  |

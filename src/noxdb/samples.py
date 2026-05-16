@@ -33,6 +33,39 @@ def _row_to_dict(cur, row) -> dict[str, Any]:
     return dict(zip([d[0] for d in cur.description], row))
 
 
+# SQR/SQRP "absent" sentinels collapsed to a single canonical empty
+# string. Plate identifiers are matched by exact string equality
+# (control auto-link, queries, migration backfill), so formatting drift
+# silently breaks linking unless every write goes through one canonical
+# form. Padding (e.g. "01") is intentionally preserved — it is the
+# established canonical shape in this dataset, not noise.
+_PLATE_NULLISH = frozenset({"", "na", "n/a"})
+
+
+def canonical_plate_id(value: str | None) -> str:
+    """Return the canonical form of an SQR / SQRP plate identifier.
+
+    Strips surrounding whitespace and collapses the "absent" sentinels
+    (``""``, ``"NA"``, ``"N/A"``, case-insensitive) to a single
+    canonical empty string. Any other value is returned stripped but
+    otherwise verbatim — zero-padding is left intact because it *is*
+    the canonical shape here.
+
+    This is the one normalization chokepoint for plate identifiers;
+    [`create`][noxdb.samples.create] / [`update`][noxdb.samples.update]
+    call it on every write and the importer reuses it so the value the
+    DB stores is always canonical and SQR+SQRP matching is reliable.
+
+    Args:
+        value: Raw SQR / SQRP cell (may be ``None``).
+
+    Returns:
+        The canonical identifier (possibly ``""`` for "no plate").
+    """
+    s = (value or "").strip()
+    return "" if s.lower() in _PLATE_NULLISH else s
+
+
 def create(
     cur,
     visit_id: int,
@@ -52,8 +85,10 @@ def create(
         sample_name: Globally unique sample name.
         sample_type: One of ``'sample'``, ``'mockIP'``, ``'input'``,
             ``'anchor'``, ``'NC'`` (DB-side `ENUM` constraint).
-        sqr: SQR identifier.
-        sqrp: SQRP identifier.
+        sqr: SQR plate identifier. Canonicalized via
+            [`canonical_plate_id`][noxdb.samples.canonical_plate_id]
+            before storage.
+        sqrp: SQRP plate identifier. Canonicalized like ``sqr``.
         library: Library identifier.
         antibody_class: Optional antibody class label.
 
@@ -70,7 +105,11 @@ def create(
         "INSERT INTO samples "
         "(visit_id, sample_name, sample_type, SQR, SQRP, library, antibody_class) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (visit_id, sample_name, sample_type, sqr, sqrp, library, antibody_class),
+        (
+            visit_id, sample_name, sample_type,
+            canonical_plate_id(sqr), canonical_plate_id(sqrp),
+            library, antibody_class,
+        ),
     )
     return cur.lastrowid
 
@@ -162,6 +201,27 @@ def get_or_create(
         return int(existing["sample_id"]), False
 
 
+def link_to_project(cur, project_id: int, sample_id: int) -> None:
+    """Register ``sample_id`` under ``project_id`` in ``project_samples``.
+
+    Idempotent: ``INSERT IGNORE`` so re-linking an already-linked
+    (project, sample) pair is a no-op. ``project_samples`` is the sole
+    source of truth for which samples belong to which project — a
+    sample may be linked to several projects (e.g. plate controls
+    shared across studies).
+
+    Args:
+        cur: Audit-logging cursor from `transaction()`.
+        project_id: Project to link the sample to. Must already exist.
+        sample_id: Sample to link. Must already exist.
+    """
+    cur.execute(
+        "INSERT IGNORE INTO project_samples (project_id, sample_id) "
+        "VALUES (?, ?)",
+        (project_id, sample_id),
+    )
+
+
 def list_for_visit(
     cur, visit_id: int, *, order_by: str = "sample_id"
 ) -> list[dict[str, Any]]:
@@ -232,8 +292,9 @@ def update(
         sample_name: New name (if not None).
         sample_type: New type (if not None). See
             [`create`][noxdb.samples.create] for allowed values.
-        sqr: New SQR (if not None).
-        sqrp: New SQRP (if not None).
+        sqr: New SQR (if not None). Canonicalized via
+            [`canonical_plate_id`][noxdb.samples.canonical_plate_id].
+        sqrp: New SQRP (if not None). Canonicalized like ``sqr``.
         library: New library (if not None).
         antibody_class: New antibody class (if not None).
 
@@ -243,8 +304,8 @@ def update(
     fields = {
         "sample_name": sample_name,
         "sample_type": sample_type,
-        "SQR": sqr,
-        "SQRP": sqrp,
+        "SQR": canonical_plate_id(sqr) if sqr is not None else None,
+        "SQRP": canonical_plate_id(sqrp) if sqrp is not None else None,
         "library": library,
         "antibody_class": antibody_class,
     }

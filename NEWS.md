@@ -10,6 +10,52 @@ matching entry below; this is enforced by `.github/workflows/pr-checks.yml`.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-05-16
+
+Many-to-many project↔sample schema. Applied to production `ccr_metadata`
+via `schema/003_cross_project_samples.sql`.
+
+### Added
+- `schema/003_cross_project_samples.sql`: new `project_samples`
+  junction table — the sole source of truth for project↔sample
+  membership (a sample can belong to several projects). Backfills
+  study/input/control links and canonicalizes existing `SQR`/`SQRP`.
+- `samples.link_to_project()`: idempotent project↔sample link helper.
+- `samples.canonical_plate_id()`: single SQR/SQRP canonicalization
+  chokepoint (strip whitespace, `NA`/`N/A`/empty → `""`, padding
+  preserved); applied on every write and reused by the importer, which
+  now also validates plate ids and reports normalizations.
+- `subjects.get_or_create()` raises on a reused `subject_code` with a
+  conflicting `sex`/`origin` (loud cross-study collision guard).
+
+### Changed
+- Project membership lives entirely in `project_samples`; `subjects`
+  no longer carries `project_id` and `subject_code` is now globally
+  unique. `subject → visit → sample` is pure lineage with no project
+  affiliation.
+- Controls (mockIP/anchor/NC) are linked to every study project that
+  shares their plate (SQR+SQRP) at import/migration time instead of
+  living in dedicated control projects.
+- `queries.*` project-scoped helpers, `workflows.register_subject_with_visit`,
+  and the project importer rewritten to the junction model;
+  `project_summary.n_samples` now counts every linked sample (controls
+  included).
+- `scripts/add_controls.py` redesigned to emit controls into the
+  plate-sharing study bundles rather than dedicated control projects.
+- Docs (`schema.md`, `index.md`, `quickstart.md`,
+  `reference/index.md`) updated to the junction model; `quickstart.md`
+  regenerated from a live run against the migrated database.
+
+### Removed
+- Dedicated `mockIP` / `anchor` / `NC` projects (deleted by migration
+  003; the `input` umbrella project is retained).
+- `scripts/fix_controls_projects.py` (obsolete under the new model).
+
+### Security
+- `users/revoke_readwrite.sql`: revoked INSERT/UPDATE/DELETE from the
+  two analyst accounts (SELECT-only like other non-admin users) —
+  ad-hoc writes would bypass the `project_samples` invariant.
+
 ## [0.5.2] - 2026-05-15
 
 ### Fixed

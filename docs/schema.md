@@ -7,14 +7,30 @@ find it.
 
 ---
 
-## Hierarchy: project → subject → visit → sample
+## Model: lineage + project membership
 
-- **project** — independent study or dataset (including dedicated control projects).
-- **subject** — one person/donor within a project. Stable attributes only (`sex`, `origin`). `subject_code` is unique per project. `sex` is nullable for control samples.
-- **visit** — one timepoint / collection event for a subject. Time-varying clinical metadata (`age`, `group_test`, `timepoint`) goes here. `age` is nullable for control samples.
-- **sample** — one physical sample / library / Ig-class measurement attached to a visit. `sample_name` is globally unique.
+Since migration `003_cross_project_samples` the data model has **two
+independent axes**:
 
-Flexible typed key/value metadata can be attached to visits (`visit_metadata`) and samples (`sample_metadata`). File paths are tracked in `sample_files`.
+- **Lineage** (`subject → visit → sample`) — pure provenance, carries
+  **no** project affiliation:
+    - **subject** — one person / donor. Stable attributes only (`sex`,
+      `origin`). `subject_code` is **globally unique** (no longer scoped
+      to a project). `sex` is nullable for control subjects.
+    - **visit** — one timepoint / collection event for a subject.
+      Time-varying clinical metadata (`age`, `group_test`, `timepoint`)
+      goes here. `age` is nullable for control visits.
+    - **sample** — one physical sample / library / Ig-class measurement
+      attached to a visit. `sample_name` is globally unique.
+- **Project membership** (`project_samples`) — a many-to-many junction
+  that is the **sole source of truth** for which samples belong to
+  which project. One sample can belong to several projects (shared
+  plate controls, shared HC cohorts); a project is just a named set of
+  samples.
+
+Flexible typed key/value metadata can be attached to visits
+(`visit_metadata`) and samples (`sample_metadata`). File paths are
+tracked in `sample_files`.
 
 ---
 
@@ -22,7 +38,11 @@ Flexible typed key/value metadata can be attached to visits (`visit_metadata`) a
 
 ### `projects`
 
-Top-level study or dataset. Each control type (mockIP, anchor, NC, input) has its own dedicated project row — see [Controls](#controls) below.
+Top-level study or dataset. A project owns no rows directly — its
+samples are attached through the [`project_samples`](#project_samples)
+junction. The `input` project is kept as an umbrella for input-DNA
+controls; the old `mockIP` / `anchor` / `NC` projects were removed in
+migration `003` — see [Controls](#controls) below.
 
 | Column         | Type                      | Nullable | Notes                          |
 |----------------|---------------------------|----------|--------------------------------|
@@ -36,18 +56,27 @@ Top-level study or dataset. Each control type (mockIP, anchor, NC, input) has it
 
 ### `subjects`
 
-One row per person / donor within a project. Stable subject-level attributes only.
+One row per person / donor. Stable subject-level attributes only —
+**no project affiliation** (membership lives in `project_samples`,
+reached via the sample → visit → subject lineage).
 
 | Column         | Type                      | Nullable | Notes                                                  |
 |----------------|---------------------------|----------|--------------------------------------------------------|
 | `subject_id`   | `BIGINT UNSIGNED` PK AI   | NO       |                                                        |
-| `project_id`   | `BIGINT UNSIGNED` FK      | NO       | → `projects.project_id` CASCADE                        |
-| `subject_code` | `VARCHAR(100)`            | NO       | UNIQUE within project: `(project_id, subject_code)`    |
+| `subject_code` | `VARCHAR(100)`            | NO       | **Globally UNIQUE** (`uq_subjects_subject_code`)       |
 | `sex`          | `CHAR(1)`                 | YES      | `'M'` or `'F'` when set; NULL for control subjects     |
 | `origin`       | `VARCHAR(100)`            | YES      |                                                        |
 | `created_at`   | `TIMESTAMP`               | NO       | DEFAULT `CURRENT_TIMESTAMP`                            |
 
-`sex` was made nullable in migration `002_controls_support` to accommodate control sample rows that have no biological donor.
+`sex` was made nullable in migration `002_controls_support` to
+accommodate control rows that have no biological donor. Migration
+`003_cross_project_samples` dropped `subjects.project_id` and replaced
+the old per-project `(project_id, subject_code)` key with a global
+UNIQUE on `subject_code` — a subject is now the same subject regardless
+of which study references it. `subjects.get_or_create` raises if a
+reused `subject_code` arrives with a conflicting `sex`/`origin`, so an
+accidental cross-study collision fails loudly instead of silently
+merging two donors.
 
 ---
 
@@ -78,13 +107,50 @@ One row per physical sample / library / Ig-class measurement. `sample_name` is g
 | `visit_id`       | `BIGINT UNSIGNED` FK                                         | NO       | → `visits.visit_id` CASCADE                    |
 | `sample_name`    | `VARCHAR(100)`                                               | NO       | UNIQUE globally                                |
 | `sample_type`    | `ENUM('sample','mockIP','input','anchor','NC')`              | NO       | See [Controls](#controls)                      |
-| `SQR`            | `VARCHAR(10)`                                                | NO       | Sequencing run identifier — plate-level key    |
-| `SQRP`           | `VARCHAR(10)`                                                | NO       | Sequencing run plate — plate-level key         |
+| `SQR`            | `VARCHAR(10)`                                                | NO       | Sequencing run — plate-level key (canonicalized) |
+| `SQRP`           | `VARCHAR(10)`                                                | NO       | Plate within the run — plate-level key (canonicalized) |
 | `library`        | `VARCHAR(50)`                                                | NO       |                                                |
 | `antibody_class` | `VARCHAR(50)`                                                | YES      |                                                |
 | `created_at`     | `TIMESTAMP`                                                  | NO       | DEFAULT `CURRENT_TIMESTAMP`                    |
 
 `NC` was added to the `sample_type` ENUM in migration `002_controls_support`.
+
+`SQR` / `SQRP` are **plate coordinates** matched by exact string
+equality (control auto-linking, project-scoped queries, the `003`
+backfill). To stop formatting drift from silently breaking that match,
+every write goes through one canonicalization chokepoint
+([`samples.canonical_plate_id`][noxdb.samples.canonical_plate_id]):
+surrounding whitespace is stripped and the "absent" sentinels (`NA`,
+`N/A`, empty) collapse to a single canonical empty string. Zero-padding
+(e.g. `01`) is **preserved** — it is the canonical shape in this
+dataset, not noise. The importer validates and reports any value it
+normalizes; migration `003` canonicalizes pre-existing rows before the
+control backfill runs.
+
+---
+
+### `project_samples`
+
+Many-to-many junction between `projects` and `samples` — the **sole
+source of truth** for project membership (added in migration
+`003_cross_project_samples`). A sample with no row here belongs to no
+project and is invisible to every project-scoped query.
+
+| Column       | Type                    | Nullable | Notes                                            |
+|--------------|-------------------------|----------|--------------------------------------------------|
+| `project_id` | `BIGINT UNSIGNED` FK    | NO       | → `projects.project_id` CASCADE                  |
+| `sample_id`  | `BIGINT UNSIGNED` FK    | NO       | → `samples.sample_id` CASCADE                    |
+
+Primary key is the composite `(project_id, sample_id)`, so a link is
+idempotent; an extra index on `sample_id` serves the reverse lookup.
+Both foreign keys are `ON DELETE CASCADE`: deleting a project drops its
+membership rows (the samples and their lineage survive), and deleting a
+sample drops all of its links.
+
+Write through [`samples.link_to_project`][noxdb.samples.link_to_project]
+(`INSERT IGNORE`). The importer links every imported sample to its
+project and additionally auto-links plate controls (see
+[Controls](#controls)).
 
 ---
 
@@ -145,22 +211,33 @@ Deleting a sample that still has files is rejected (`ON DELETE RESTRICT`). Files
 
 ## Controls
 
-Control samples (mockIP, anchor, NC, input) are **not stored inside study projects**. Each control type lives in its own dedicated project:
+Control samples (mockIP, anchor, NC, input) have **no project of their
+own**. Migration `003_cross_project_samples` deleted the dedicated
+`mockIP` / `anchor` / `NC` projects; only `input` survives as an
+umbrella for input-DNA controls. A control is a normal `samples` row
+(with its own subject/visit lineage) linked into the relevant projects
+through [`project_samples`](#project_samples) like any other sample.
 
-| `project_id` | `project_name` | `sample_type` | Purpose                                   |
-|--------------|----------------|---------------|-------------------------------------------|
-| 58           | `input`        | `input`       | Input DNA samples (no IP)                 |
-| 61           | `mockIP`       | `mockIP`      | Mock immunoprecipitation controls         |
-| 64           | `anchor`       | `anchor`      | Anchor controls (spike-in normalization)  |
-| 67           | `NC`           | `NC`          | Negative controls                         |
+### How controls are linked to projects
 
-### How controls are linked to study projects
+A control is linked to **every study project whose real samples share
+its plate**, identified by the canonical `SQR` + `SQRP` coordinates
+that every sample row carries. This link is materialized into
+`project_samples`, not computed at query time:
 
-Controls are matched back to a study project via the **plate coordinates** `SQR` (sequencing run) and `SQRP` (plate within that run), which every sample row carries regardless of type. A control sample processed on the same plate as a study project will share the same `SQR` + `SQRP` values.
+- **At import** — the importer links each imported sample to its
+  project, then auto-links any existing control (mockIP/anchor/NC)
+  whose `SQR`+`SQRP` matches a real (`sample`-type) row in the bundle.
+- **For historical data** — migration `003`'s Backfill 3 inserts the
+  same control→study-project links for every plate-sharing project.
 
-`queries.samples_for_project` and `queries.controls_for_project` exploit this: they join through the `SQR`/`SQRP` columns to assemble the complete set of controls associated with a given project without duplicating any rows.
-
-Because a plate can span more than one study project, the same control sample may appear in the result sets of multiple projects — this is intentional, not a data quality issue.
+Because one plate can span several study projects, the same physical
+control is linked to several projects — that is the many-to-many
+relationship working as intended, with exactly one underlying sample
+row. `queries.controls_for_project` is then a plain `project_samples`
+scan filtered to the control `sample_type`s, and
+`queries.samples_for_project` returns controls because they are simply
+project members.
 
 ### Nulls in control rows
 
@@ -209,7 +286,7 @@ are still allowed for one-off cases.
 
 - **Tables**: plural `snake_case` (`projects`, `samples`, `sample_files`).
 - **Primary keys**: `<table_singular>_id` (e.g. `subject_id`); EAV tables use plain `id`.
-- **Foreign keys**: reuse the parent PK name (`subjects.project_id`).
+- **Foreign keys**: reuse the parent PK name (e.g. `visits.subject_id`, `project_samples.project_id`).
 - **Migrations**: `schema/NNN_description.sql`, numbered and append-only. Never edit a merged migration — add the next number.
 - **Stored file paths** must be absolute. Enforced by a CHECK constraint and re-validated in [`files.register`][noxdb.files.register].
 
@@ -219,5 +296,6 @@ are still allowed for one-off cases.
 
 - `schema/001_initial.sql` — initial schema.
 - `schema/002_controls_support.sql` — nullable `sex`/`age` for control rows; adds `NC` to `sample_type` ENUM.
+- `schema/003_cross_project_samples.sql` — adds the `project_samples` junction; drops `subjects.project_id` (global UNIQUE on `subject_code`); canonicalizes `SQR`/`SQRP`; backfills study/input/control membership; deletes the `mockIP`/`anchor`/`NC` projects.
 - `users/users.sql` — role and privilege definitions (the matching `users_with_passwords.sql` is gitignored).
 - `seed/load_fake_data.py` — fake-data seed covering all four EAV value types and a longitudinal subject example.

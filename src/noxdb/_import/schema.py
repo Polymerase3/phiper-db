@@ -11,6 +11,13 @@ from __future__ import annotations
 
 from typing import Any
 
+# Reuse the single plate-id canonicalization chokepoint so the value the
+# importer validates is exactly what samples.create will store.
+from noxdb.samples import canonical_plate_id
+
+# DB column width for samples.SQR / samples.SQRP (VARCHAR(10)).
+_PLATE_MAX_LEN = 10
+
 # Required + optional columns per CSV (excluding meta_* keys).
 SUBJECTS_REQUIRED = ("subject_code", "sex")
 SUBJECTS_OPTIONAL = ("origin",)
@@ -105,6 +112,44 @@ def coerce_int(raw: str, *, field: str) -> int:
         return int(str(raw).strip())
     except (TypeError, ValueError) as exc:
         raise ValueError(f"{field}: expected int, got {raw!r}") from exc
+
+
+def validate_plate_id(raw: str | None, *, field: str) -> tuple[str, str | None]:
+    """Validate + canonicalize an SQR / SQRP cell for import.
+
+    Uses the same canonicalization as
+    [`samples.create`][noxdb.samples.create], so what the importer
+    accepts here is byte-identical to what gets stored — SQR+SQRP
+    plate matching can't drift between the two.
+
+    Args:
+        raw: The raw cell value.
+        field: Human-readable identifier (e.g.
+            ``"samples.csv row 4.sqr"``) embedded in messages so the
+            user can locate the cell.
+
+    Returns:
+        ``(canonical, warning)`` — *canonical* is the value that will
+        be stored; *warning* is a human-readable string when
+        canonicalization changed the input (whitespace stripped or an
+        ``NA``/empty sentinel collapsed), else ``None``.
+
+    Raises:
+        ValueError: If the canonical value exceeds the
+            ``samples.SQR`` / ``samples.SQRP`` column width (10),
+            which would otherwise fail with a cryptic driver error
+            mid-commit.
+    """
+    canon = canonical_plate_id(raw)
+    if len(canon) > _PLATE_MAX_LEN:
+        raise ValueError(
+            f"{field}: {raw!r} is {len(canon)} chars after normalization; "
+            f"max is {_PLATE_MAX_LEN}"
+        )
+    warning = None
+    if canon != (raw or "").strip():
+        warning = f"{field}: {raw!r} normalized to {canon!r}"
+    return canon, warning
 
 
 def split_columns(

@@ -54,11 +54,13 @@ def project_with_local_files(_init_pool, tmp_path):
     with transaction() as cur:
         wipe_all(cur)
         pid = projects.create(cur, "FETCH_P", pi_name="Dr. F")
-        sa = subjects.create(cur, pid, "S_A", "F", origin="PL")
+        sa = subjects.create(cur, "S_A", "F", origin="PL")
         va = visits.create(cur, sa, "ctrl", 30, timepoint="baseline")
         a1 = samples.create(cur, va, "S_A1", "sample", "Q", "Q", "libA",
                             antibody_class="IgG")
         b1 = samples.create(cur, va, "S_B1", "sample", "Q", "Q", "libA")
+        samples.link_to_project(cur, pid, a1)
+        samples.link_to_project(cur, pid, b1)
 
         metadata.set_visit(cur, va, "bmi", 22.0)
         metadata.set_sample(cur, a1, "well", "A01")

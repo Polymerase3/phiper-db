@@ -12,7 +12,10 @@ import pytest
 from noxdb import close_pool, get_connection, init_pool
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SCHEMA_FILE = REPO_ROOT / "schema" / "001_initial.sql"
+SCHEMA_DIR = REPO_ROOT / "schema"
+# Apply every numbered migration in order (001_initial, 002_*, 003_*, …)
+# so the test DB matches production after all migrations.
+SCHEMA_FILES = sorted(SCHEMA_DIR.glob("[0-9][0-9][0-9]_*.sql"))
 DB_NAME = os.environ.get("DB_NAME", "ccr_metadata")
 
 if not re.fullmatch(r"[A-Za-z0-9_]+", DB_NAME):
@@ -73,14 +76,14 @@ def fresh_db():
     cur.close()
     conn.close()
 
-    schema_sql = SCHEMA_FILE.read_text()
     conn = _server_conn()
     cur = conn.cursor()
     cur.execute(f"USE `{DB_NAME}`")
-    for stmt in _split_sql(schema_sql):
-        if _is_db_selection_stmt(stmt):
-            continue
-        cur.execute(stmt)
+    for schema_file in SCHEMA_FILES:
+        for stmt in _split_sql(schema_file.read_text()):
+            if _is_db_selection_stmt(stmt):
+                continue
+            cur.execute(stmt)
     cur.close()
     conn.close()
     yield

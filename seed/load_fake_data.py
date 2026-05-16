@@ -29,13 +29,25 @@ def insert_project(cur) -> int:
     return cur.lastrowid
 
 
-def insert_subject(cur, project_id: int, code: str, sex: str, origin: str) -> int:
+def insert_subject(cur, code: str, sex: str, origin: str) -> int:
     cur.execute(
-        "INSERT INTO subjects (project_id, subject_code, sex, origin) "
-        "VALUES (?, ?, ?, ?)",
-        (project_id, code, sex, origin),
+        "INSERT INTO subjects (subject_code, sex, origin) "
+        "VALUES (?, ?, ?)",
+        (code, sex, origin),
     )
     return cur.lastrowid
+
+
+def link_project_sample(cur, project_id: int, sample_id: int) -> None:
+    """Register sample under project in the project_samples junction.
+
+    Schema 003 makes project_samples the sole project↔sample link.
+    """
+    cur.execute(
+        "INSERT IGNORE INTO project_samples (project_id, sample_id) "
+        "VALUES (?, ?)",
+        (project_id, sample_id),
+    )
 
 
 def insert_visit(
@@ -131,11 +143,11 @@ def _load_with_cursor(cur) -> None:
     project_id = insert_project(cur)
 
     # Subject 1 — cross-sectional, single visit
-    s1 = insert_subject(cur, project_id, "SUBJ001", "F", "Italy")
+    s1 = insert_subject(cur, "SUBJ001", "F", "Italy")
     v1 = insert_visit(cur, s1, "baseline", "control", 34)
 
     # Subject 2 — longitudinal, three visits
-    s2 = insert_subject(cur, project_id, "SUBJ002", "M", "Poland")
+    s2 = insert_subject(cur, "SUBJ002", "M", "Poland")
     v2a = insert_visit(cur, s2, "baseline", "treated", 41)
     v2b = insert_visit(cur, s2, "month_3", "treated", 41)
     v2c = insert_visit(cur, s2, "month_6", "treated", 42)
@@ -172,9 +184,9 @@ def _load_with_cursor(cur) -> None:
     sample_ids: list[int] = []
     for visit_id, rows in samples_per_visit.items():
         for name, stype, sqr, sqrp, lib, ab in rows:
-            sample_ids.append(
-                insert_sample(cur, visit_id, name, stype, sqr, sqrp, lib, ab)
-            )
+            sid = insert_sample(cur, visit_id, name, stype, sqr, sqrp, lib, ab)
+            sample_ids.append(sid)
+            link_project_sample(cur, project_id, sid)
 
     # sample_metadata covering all four EAV types
     first = sample_ids[0]

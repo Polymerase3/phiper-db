@@ -10,7 +10,6 @@ notebook):
 
     # Notebook style — workflow owns the transaction:
     sid, vid = workflows.register_subject_with_visit(
-        project_id=pid,
         subject_code="S1", sex="F",
         timepoint="baseline", group_test="ctrl", age=42,
         visit_metadata={"bmi": 24.1, "smoker": False},
@@ -56,7 +55,6 @@ def _cur_ctx(cur):
 def register_subject_with_visit(
     cur=None,
     *,
-    project_id: int,
     subject_code: str,
     sex: str,
     origin: str | None = None,
@@ -78,8 +76,7 @@ def register_subject_with_visit(
         cur: Optional cursor from `transaction()`. When ``None`` this
             workflow opens its own transaction so the multi-step
             operation stays atomic when called standalone.
-        project_id: Parent project. Must already exist.
-        subject_code: Subject code, unique within the project.
+        subject_code: Globally unique subject code.
         sex: ``'M'`` or ``'F'``. Used only when inserting a new subject.
         origin: Used only when inserting a new subject.
         timepoint: Visit timepoint. Must be non-NULL — the underlying
@@ -100,7 +97,7 @@ def register_subject_with_visit(
     """
     with _cur_ctx(cur) as c:
         subject_id, _ = subjects.get_or_create(
-            c, project_id, subject_code, sex, origin=origin,
+            c, subject_code, sex, origin=origin,
         )
         visit_id, _ = visits.get_or_create(
             c, subject_id, timepoint, group_test, age,

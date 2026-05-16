@@ -4,8 +4,9 @@ Same call style as [`noxdb.projects`][noxdb.projects] —
 every function takes a cursor first; callers wrap them in
 ``with transaction() as cur:``.
 
-The natural key is the composite ``(project_id, subject_code)`` — a
-``subject_code`` can repeat across projects, so most lookups go through
+``subject_code`` is **globally unique** — subjects carry no project
+affiliation (project membership lives in ``project_samples``, reached
+via the sample → visit → subject lineage). The natural-key lookup is
 [`get_by_code`][noxdb.subjects.get_by_code] rather than
 [`get`][noxdb.subjects.get].
 """
@@ -18,7 +19,6 @@ import mariadb
 
 _COLUMNS = (
     "subject_id",
-    "project_id",
     "subject_code",
     "sex",
     "origin",
@@ -33,7 +33,6 @@ def _row_to_dict(cur, row) -> dict[str, Any]:
 
 def create(
     cur,
-    project_id: int,
     subject_code: str,
     sex: str | None,
     *,
@@ -43,8 +42,7 @@ def create(
 
     Args:
         cur: Audit-logging cursor from `transaction()`.
-        project_id: Parent project. Must already exist.
-        subject_code: Stable code, unique within the project.
+        subject_code: Stable, globally unique subject code.
         sex: ``'M'``, ``'F'``, or ``None`` for controls without a
             known sex (DB-side CHECK allows NULL).
         origin: Optional free-text origin.
@@ -53,16 +51,16 @@ def create(
         The newly inserted ``subject_id``.
 
     Raises:
-        mariadb.IntegrityError: If ``(project_id, subject_code)`` already
-            exists, ``project_id`` does not reference an existing
-            project, or ``sex`` is a non-null value outside ``('M', 'F')``.
-            Use [`get_or_create`][noxdb.subjects.get_or_create]
+        mariadb.IntegrityError: If ``subject_code`` already exists
+            (global UNIQUE), or ``sex`` is a non-null value outside
+            ``('M', 'F')``. Use
+            [`get_or_create`][noxdb.subjects.get_or_create]
             for idempotent inserts.
     """
     cur.execute(
-        "INSERT INTO subjects (project_id, subject_code, sex, origin) "
-        "VALUES (?, ?, ?, ?)",
-        (project_id, subject_code, sex if sex and sex.upper() not in ("NA", "N/A") else None, origin),
+        "INSERT INTO subjects (subject_code, sex, origin) "
+        "VALUES (?, ?, ?)",
+        (subject_code, sex if sex and sex.upper() not in ("NA", "N/A") else None, origin),
     )
     return cur.lastrowid
 
@@ -82,33 +80,69 @@ def get(cur, subject_id: int) -> dict[str, Any] | None:
     return _row_to_dict(cur, row) if row is not None else None
 
 
-def get_by_code(
-    cur, project_id: int, subject_code: str
-) -> dict[str, Any] | None:
-    """Return the subject row for the composite natural key.
+def get_by_code(cur, subject_code: str) -> dict[str, Any] | None:
+    """Return the subject row for the globally-unique natural key.
 
-    Hot path for CSV importers: look up by ``(project_id, subject_code)``
-    before inserting.
+    Hot path for CSV importers: look up by ``subject_code`` before
+    inserting.
 
     Args:
         cur: Audit-logging cursor from `transaction()`.
-        project_id: Parent project.
-        subject_code: Subject code, unique within the project.
+        subject_code: Globally unique subject code.
 
     Returns:
         The row as ``dict[str, Any]``, or ``None`` if not found.
     """
     cur.execute(
-        "SELECT * FROM subjects WHERE project_id = ? AND subject_code = ?",
-        (project_id, subject_code),
+        "SELECT * FROM subjects WHERE subject_code = ?",
+        (subject_code,),
     )
     row = cur.fetchone()
     return _row_to_dict(cur, row) if row is not None else None
 
 
+def _norm_sex(sex: str | None) -> str | None:
+    """Same NA→NULL normalization `create` applies, for conflict checks."""
+    return sex if sex and sex.upper() not in ("NA", "N/A") else None
+
+
+def _assert_no_conflict(existing: dict[str, Any], sex: str | None, origin: str | None) -> None:
+    """Raise if a reused ``subject_code`` carries different attributes.
+
+    ``subject_code`` is globally UNIQUE: a row with this code already
+    exists. Reusing it is intentional for genuinely shared subjects,
+    but a *different* sex/origin almost always means an accidental
+    cross-study code collision silently merging two unrelated subjects.
+    Fail loudly instead. Only compares when both the existing value and
+    the incoming value are non-NULL (an incoming NULL asserts nothing;
+    enriching a NULL existing value is out of scope for get_or_create).
+    """
+    incoming_sex = _norm_sex(sex)
+    if (
+        incoming_sex is not None
+        and existing["sex"] is not None
+        and existing["sex"] != incoming_sex
+    ):
+        raise ValueError(
+            f"subject_code {existing['subject_code']!r} already exists with "
+            f"sex={existing['sex']!r}; refusing to reuse it for "
+            f"sex={incoming_sex!r} (likely a cross-study subject_code "
+            "collision — subject_code is globally unique)"
+        )
+    if (
+        origin is not None
+        and existing["origin"] is not None
+        and existing["origin"] != origin
+    ):
+        raise ValueError(
+            f"subject_code {existing['subject_code']!r} already exists with "
+            f"origin={existing['origin']!r}; refusing to reuse it for "
+            f"origin={origin!r} (likely a cross-study subject_code collision)"
+        )
+
+
 def get_or_create(
     cur,
-    project_id: int,
     subject_code: str,
     sex: str | None,
     *,
@@ -116,15 +150,17 @@ def get_or_create(
 ) -> tuple[int, bool]:
     """Idempotently return the subject id, inserting if needed.
 
-    Existing rows are returned as-is — *sex* and *origin* are not used
-    to update an existing row. Falls back to a re-fetch on the
+    Existing rows are returned as-is and never *updated* by this call.
+    *sex* / *origin* are still checked against the existing row: a
+    mismatch raises (see Raises) so an accidental cross-study
+    ``subject_code`` collision fails loudly instead of silently
+    merging two unrelated subjects. Falls back to a re-fetch on the
     UNIQUE-violation race where another transaction inserted the same
     key in parallel.
 
     Args:
         cur: Audit-logging cursor from `transaction()`.
-        project_id: Parent project.
-        subject_code: Subject code, unique within the project.
+        subject_code: Globally unique subject code.
         sex: Used only on insert.
         origin: Used only on insert.
 
@@ -133,27 +169,37 @@ def get_or_create(
         call inserted the row.
 
     Raises:
+        ValueError: If a subject with this ``subject_code`` already
+            exists but with a different non-NULL ``sex`` / ``origin``
+            (a likely accidental cross-study collision — see
+            :func:`_assert_no_conflict`).
         mariadb.IntegrityError: If the race-recovery fetch also misses.
     """
-    existing = get_by_code(cur, project_id, subject_code)
+    existing = get_by_code(cur, subject_code)
     if existing is not None:
+        _assert_no_conflict(existing, sex, origin)
         return int(existing["subject_id"]), False
     try:
         new_id = create(
-            cur, project_id, subject_code, sex, origin=origin,
+            cur, subject_code, sex, origin=origin,
         )
         return new_id, True
     except mariadb.IntegrityError:
-        existing = get_by_code(cur, project_id, subject_code)
+        existing = get_by_code(cur, subject_code)
         if existing is None:
             raise
+        _assert_no_conflict(existing, sex, origin)
         return int(existing["subject_id"]), False
 
 
 def list_for_project(
     cur, project_id: int, *, order_by: str = "subject_id"
 ) -> list[dict[str, Any]]:
-    """Return all subjects belonging to a project.
+    """Return all subjects with at least one sample in a project.
+
+    Project membership lives in ``project_samples``; this traverses
+    ``project_samples → samples → visits → subjects`` and de-duplicates,
+    since a subject can have many samples in the same project.
 
     Args:
         cur: Audit-logging cursor from `transaction()`.
@@ -171,7 +217,11 @@ def list_for_project(
             f"order_by must be one of {sorted(_ORDERABLE)}, got {order_by!r}"
         )
     cur.execute(
-        f"SELECT * FROM subjects WHERE project_id = ? ORDER BY {order_by}",
+        "SELECT DISTINCT sub.* FROM project_samples ps "
+        "JOIN samples sm   ON sm.sample_id   = ps.sample_id "
+        "JOIN visits v     ON v.visit_id     = sm.visit_id "
+        "JOIN subjects sub ON sub.subject_id = v.subject_id "
+        f"WHERE ps.project_id = ? ORDER BY sub.{order_by}",
         (project_id,),
     )
     rows = cur.fetchall()
@@ -180,17 +230,26 @@ def list_for_project(
 
 
 def count_for_project(cur, project_id: int) -> int:
-    """Return the number of subjects in a project.
+    """Return the number of distinct subjects with samples in a project.
+
+    Traverses ``project_samples → samples → visits → subjects`` and
+    counts distinct subjects (a subject can have many samples in the
+    project).
 
     Args:
         cur: Audit-logging cursor from `transaction()`.
         project_id: Project to count.
 
     Returns:
-        Number of subject rows.
+        Number of distinct subject rows.
     """
     cur.execute(
-        "SELECT COUNT(*) FROM subjects WHERE project_id = ?", (project_id,)
+        "SELECT COUNT(DISTINCT sub.subject_id) FROM project_samples ps "
+        "JOIN samples sm   ON sm.sample_id   = ps.sample_id "
+        "JOIN visits v     ON v.visit_id     = sm.visit_id "
+        "JOIN subjects sub ON sub.subject_id = v.subject_id "
+        "WHERE ps.project_id = ?",
+        (project_id,),
     )
     return int(cur.fetchone()[0])
 
@@ -205,11 +264,9 @@ def update(
 ) -> bool:
     """Partial update of a subject row.
 
-    Only kwargs with non-None values are written. ``project_id`` and
-    ``created_at`` are intentionally NOT updatable here — moving a
-    subject between projects is not a routine operation and would
-    silently corrupt downstream lineage. Use raw SQL if you really
-    need it.
+    Only kwargs with non-None values are written. ``created_at`` is
+    intentionally NOT updatable here. Use raw SQL if you really need
+    it.
 
     Args:
         cur: Audit-logging cursor from `transaction()`.

@@ -116,10 +116,10 @@ def samples_for_project(
 ) -> "pd.DataFrame":
     """Return one row per sample in a project, joined with parent IDs.
 
-    By default also includes the plate controls (mockIP, anchor, NC) that
-    ran alongside the project's real samples, matched via SQR + SQRP.
-    Control rows carry their own ``project_id`` (the control project, e.g.
-    61 for mockIP) rather than the study project_id.
+    Project membership lives entirely in ``project_samples``; plate
+    controls (mockIP, anchor, NC) are linked there at import time, so
+    they come back from the same junction scan as the real samples. The
+    ``project_id`` column is therefore always the queried project.
 
     Output columns: ``project_id``, ``subject_id``, ``subject_code``,
     ``visit_id``, ``timepoint``, ``sample_id``, ``sample_name``,
@@ -136,9 +136,9 @@ def samples_for_project(
         has_files: If ``True``, keep only samples with ≥ 1 file. If
             ``False``, keep only samples with no files. If ``None``, no
             filter.
-        include_controls: If ``True`` (default), append plate controls
-            (mockIP, anchor, NC) matched by SQR + SQRP. Ignored when
-            ``sample_type`` is set.
+        include_controls: If ``True`` (default), keep the plate controls
+            (mockIP, anchor, NC) linked to this project. If ``False``,
+            exclude them. Ignored when ``sample_type`` is set.
 
     Returns:
         A ``pandas.DataFrame`` with one row per matching sample.
@@ -146,48 +146,33 @@ def samples_for_project(
     Raises:
         ImportError: If pandas is not installed.
     """
-    # Step 1: subjects for this project (indexed on project_id).
-    cur.execute(
-        "SELECT subject_id, project_id, subject_code FROM subjects WHERE project_id = ?",
-        (project_id,),
-    )
-    subj_rows = _fetch_dicts(cur)
-    if not subj_rows:
-        return _pd().DataFrame()
-    subject_ids = [r["subject_id"] for r in subj_rows]
-    subj_map = {r["subject_id"]: r for r in subj_rows}
+    pd = _pd()
 
-    # Step 2: visits for those subjects (indexed on subject_id).
-    s_ph = ",".join(["?"] * len(subject_ids))
-    cur.execute(
-        f"SELECT visit_id, subject_id, timepoint FROM visits WHERE subject_id IN ({s_ph})",
-        tuple(subject_ids),
-    )
-    visit_rows = _fetch_dicts(cur)
-    if not visit_rows:
-        return _pd().DataFrame()
-    visit_ids = [r["visit_id"] for r in visit_rows]
-    visit_map = {r["visit_id"]: r for r in visit_rows}
-
-    # Step 3: samples for those visits (indexed on visit_id).
-    v_ph = ",".join(["?"] * len(visit_ids))
-    s_where = f"WHERE visit_id IN ({v_ph})"
-    s_params: list[Any] = list(visit_ids)
+    # Step 1: every sample linked to this project, joined outward to its
+    # lineage. project_samples is the sole membership source of truth.
+    where = ["ps.project_id = ?"]
+    params: list[Any] = [project_id]
     if sample_type is not None:
-        s_where += " AND sample_type = ?"
-        s_params.append(sample_type)
+        where.append("sm.sample_type = ?")
+        params.append(sample_type)
+    elif not include_controls:
+        where.append("sm.sample_type NOT IN ('mockIP', 'anchor', 'NC')")
     cur.execute(
-        "SELECT sample_id, visit_id, sample_name, sample_type, "
-        f"SQR, SQRP, library, antibody_class FROM samples {s_where} ORDER BY sample_id",
-        tuple(s_params),
+        "SELECT sm.sample_id, sm.visit_id, sm.sample_name, sm.sample_type, "
+        "sm.SQR, sm.SQRP, sm.library, sm.antibody_class, "
+        "v.timepoint, sub.subject_id, sub.subject_code "
+        "FROM project_samples ps "
+        "JOIN samples sm   ON sm.sample_id   = ps.sample_id "
+        "JOIN visits v     ON v.visit_id     = sm.visit_id "
+        "JOIN subjects sub ON sub.subject_id = v.subject_id "
+        f"WHERE {' AND '.join(where)} ORDER BY sm.sample_id",
+        tuple(params),
     )
     sample_rows = _fetch_dicts(cur)
     if not sample_rows:
-        return _pd().DataFrame()
+        return pd.DataFrame()
 
-    pd = _pd()
-
-    # Step 4: optional file filters — one indexed lookup against sample_files.
+    # Step 2: optional file filters — one indexed lookup against sample_files.
     if has_files is not None or file_type is not None:
         sm_ids = [r["sample_id"] for r in sample_rows]
         f_ph = ",".join(["?"] * len(sm_ids))
@@ -206,17 +191,13 @@ def samples_for_project(
         else:  # has_files is False
             sample_rows = [r for r in sample_rows if r["sample_id"] not in ids_with_files]
 
-    # Assemble flat rows in Python — no extra round trips.
-    rows = []
-    for sr in sample_rows:
-        vr = visit_map[sr["visit_id"]]
-        sj = subj_map[vr["subject_id"]]
-        rows.append({
-            "project_id": sj["project_id"],
-            "subject_id": sj["subject_id"],
-            "subject_code": sj["subject_code"],
-            "visit_id": vr["visit_id"],
-            "timepoint": vr["timepoint"],
+    rows = [
+        {
+            "project_id": project_id,
+            "subject_id": sr["subject_id"],
+            "subject_code": sr["subject_code"],
+            "visit_id": sr["visit_id"],
+            "timepoint": sr["timepoint"],
             "sample_id": sr["sample_id"],
             "sample_name": sr["sample_name"],
             "sample_type": sr["sample_type"],
@@ -224,35 +205,10 @@ def samples_for_project(
             "SQRP": sr["SQRP"],
             "library": sr["library"],
             "antibody_class": sr["antibody_class"],
-        })
-    df = pd.DataFrame(rows)
-
-    # Append plate controls when requested and no explicit type filter is set.
-    if include_controls and sample_type is None and not df.empty:
-        ctrl_df = controls_for_project(cur, project_id)
-        if not ctrl_df.empty:
-            # Apply the same file filters to controls.
-            if has_files is not None or file_type is not None:
-                ctrl_ids = ctrl_df["sample_id"].tolist()
-                f_ph = ",".join(["?"] * len(ctrl_ids))
-                f_where = f"WHERE sample_id IN ({f_ph})"
-                f_params: list[Any] = list(ctrl_ids)
-                if file_type is not None:
-                    f_where += " AND file_type = ?"
-                    f_params.append(file_type)
-                cur.execute(
-                    f"SELECT DISTINCT sample_id FROM sample_files {f_where}",
-                    tuple(f_params),
-                )
-                ctrl_ids_with_files = {row[0] for row in cur.fetchall()}
-                if has_files is True or file_type is not None:
-                    ctrl_df = ctrl_df[ctrl_df["sample_id"].isin(ctrl_ids_with_files)]
-                else:
-                    ctrl_df = ctrl_df[~ctrl_df["sample_id"].isin(ctrl_ids_with_files)]
-            if not ctrl_df.empty:
-                df = pd.concat([df, ctrl_df[df.columns]], ignore_index=True)
-
-    return df
+        }
+        for sr in sample_rows
+    ]
+    return pd.DataFrame(rows)
 
 
 def samples_with_metadata(
@@ -367,16 +323,13 @@ def controls_for_project(
     *,
     sample_types: list[str] | None = None,
 ) -> "pd.DataFrame":
-    """Return control samples that ran on the same plates as a project.
+    """Return the control samples linked to a project.
 
-    Matches by SQR + SQRP: any control whose SQR and SQRP values appear
-    on at least one real sample in the project is returned. Because plates
-    can span multiple projects, a single control may be relevant to several
-    projects — this query handles that naturally.
-
-    Controls live in dedicated projects (``mockIP``, ``anchor``, ``NC``,
-    ``input``) rather than in study projects, so this is the intended way
-    to retrieve them for analysis.
+    Controls (mockIP, anchor, NC) are linked into ``project_samples``
+    at import time for every study project that shares their SQR+SQRP
+    plate coordinates, so this is a plain junction scan filtered to the
+    control ``sample_type``\\ s. A single physical control can be linked
+    to several projects — this query handles that naturally.
 
     Args:
         cur: Audit-logging cursor from `transaction()`.
@@ -389,42 +342,26 @@ def controls_for_project(
         A ``pandas.DataFrame`` with columns: ``sample_id``, ``sample_name``,
         ``sample_type``, ``SQR``, ``SQRP``, ``library``, ``antibody_class``,
         ``visit_id``, ``timepoint``, ``subject_id``, ``subject_code``,
-        ``project_id`` (the control project's id, e.g. 61 for mockIP).
+        ``project_id`` (the queried project's id).
 
     Raises:
         ImportError: If pandas is not installed.
     """
     pd = _pd()
     types = sample_types or ["mockIP", "anchor", "NC"]
-
-    # Step 1: distinct SQR+SQRP pairs from real samples in this project.
-    cur.execute(
-        "SELECT DISTINCT s.SQR, s.SQRP "
-        "FROM samples s "
-        "JOIN visits v ON v.visit_id = s.visit_id "
-        "JOIN subjects sub ON sub.subject_id = v.subject_id "
-        "WHERE sub.project_id = ? AND s.sample_type = 'sample'",
-        (project_id,),
-    )
-    pairs = cur.fetchall()
-    if not pairs:
-        return pd.DataFrame()
-
-    # Step 2: fetch controls whose SQR+SQRP matches any of those pairs.
     type_ph = ",".join(["?"] * len(types))
-    or_clauses = " OR ".join(["(s.SQR = ? AND s.SQRP = ?)"] * len(pairs))
-    params: list[Any] = list(types) + [v for pair in pairs for v in pair]
     cur.execute(
         "SELECT s.sample_id, s.sample_name, s.sample_type, s.SQR, s.SQRP, "
         "s.library, s.antibody_class, "
         "v.visit_id, v.timepoint, "
-        "sub.subject_id, sub.subject_code, sub.project_id "
-        "FROM samples s "
-        "JOIN visits v ON v.visit_id = s.visit_id "
+        "sub.subject_id, sub.subject_code, ps.project_id "
+        "FROM project_samples ps "
+        "JOIN samples s    ON s.sample_id    = ps.sample_id "
+        "JOIN visits v     ON v.visit_id     = s.visit_id "
         "JOIN subjects sub ON sub.subject_id = v.subject_id "
-        f"WHERE s.sample_type IN ({type_ph}) AND ({or_clauses}) "
+        f"WHERE ps.project_id = ? AND s.sample_type IN ({type_ph}) "
         "ORDER BY s.sample_type, s.SQR, s.SQRP, s.sample_id",
-        tuple(params),
+        tuple([project_id] + list(types)),
     )
     return pd.DataFrame(_fetch_dicts(cur))
 
@@ -449,11 +386,12 @@ def list_inputs(cur) -> "pd.DataFrame":
         "SELECT s.sample_id, s.sample_name, s.sample_type, s.SQR, s.SQRP, "
         "s.library, s.antibody_class, "
         "v.visit_id, v.timepoint, "
-        "sub.subject_id, sub.subject_code, sub.project_id "
-        "FROM samples s "
-        "JOIN visits v ON v.visit_id = s.visit_id "
+        "sub.subject_id, sub.subject_code, ps.project_id "
+        "FROM project_samples ps "
+        "JOIN projects p   ON p.project_id   = ps.project_id "
+        "JOIN samples s    ON s.sample_id    = ps.sample_id "
+        "JOIN visits v     ON v.visit_id     = s.visit_id "
         "JOIN subjects sub ON sub.subject_id = v.subject_id "
-        "JOIN projects p ON p.project_id = sub.project_id "
         "WHERE p.project_name = 'input' "
         "ORDER BY s.sample_id",
     )
@@ -512,7 +450,7 @@ def files_for_project(
         ImportError: If pandas is not installed.
     """
     pd = _pd()
-    where = ["s.project_id = ?"]
+    where = ["ps.project_id = ?"]
     params: list[Any] = [project_id]
     if file_type is not None:
         where.append("f.file_type = ?")
@@ -525,7 +463,8 @@ def files_for_project(
         "s.subject_code, v.timepoint, "
         "f.file_type, f.file_path, f.file_size_bytes, f.checksum_md5, "
         "f.storage_tier, f.created_at "
-        "FROM sample_files f "
+        "FROM project_samples ps "
+        "JOIN sample_files f ON f.sample_id = ps.sample_id "
         "JOIN samples sm ON sm.sample_id = f.sample_id "
         "JOIN visits v ON v.visit_id = sm.visit_id "
         "JOIN subjects s ON s.subject_id = v.subject_id "
@@ -555,64 +494,49 @@ def project_summary(cur, project_id: int) -> dict[str, Any]:
         ``dict[str, int]`` keyed by ``file_type``.
     """
     cur.execute(
-        "SELECT COUNT(*) FROM subjects WHERE project_id = ?", (project_id,)
+        "SELECT COUNT(DISTINCT sub.subject_id) FROM project_samples ps "
+        "JOIN samples sm   ON sm.sample_id   = ps.sample_id "
+        "JOIN visits v     ON v.visit_id     = sm.visit_id "
+        "JOIN subjects sub ON sub.subject_id = v.subject_id "
+        "WHERE ps.project_id = ?",
+        (project_id,),
     )
     n_subjects = int(cur.fetchone()[0])
 
     cur.execute(
-        "SELECT COUNT(*) FROM visits v "
-        "JOIN subjects s ON s.subject_id = v.subject_id "
-        "WHERE s.project_id = ?",
+        "SELECT COUNT(DISTINCT sm.visit_id) FROM project_samples ps "
+        "JOIN samples sm ON sm.sample_id = ps.sample_id "
+        "WHERE ps.project_id = ?",
         (project_id,),
     )
     n_visits = int(cur.fetchone()[0])
 
     cur.execute(
-        "SELECT COUNT(*) FROM samples sm "
-        "JOIN visits v ON v.visit_id = sm.visit_id "
-        "JOIN subjects s ON s.subject_id = v.subject_id "
-        "WHERE s.project_id = ?",
+        "SELECT COUNT(*) FROM project_samples ps WHERE ps.project_id = ?",
         (project_id,),
     )
     n_samples = int(cur.fetchone()[0])
 
     cur.execute(
-        "SELECT f.file_type, COUNT(*) FROM sample_files f "
-        "JOIN samples sm ON sm.sample_id = f.sample_id "
-        "JOIN visits v ON v.visit_id = sm.visit_id "
-        "JOIN subjects s ON s.subject_id = v.subject_id "
-        "WHERE s.project_id = ? GROUP BY f.file_type",
+        "SELECT f.file_type, COUNT(*) FROM project_samples ps "
+        "JOIN sample_files f ON f.sample_id = ps.sample_id "
+        "WHERE ps.project_id = ? GROUP BY f.file_type",
         (project_id,),
     )
     files_by_type = {ft: int(n) for ft, n in cur.fetchall()}
     n_files = sum(files_by_type.values())
 
-    # Control counts via SQR+SQRP reverse lookup (no pandas dependency).
+    # Controls are linked into project_samples at import time, so the
+    # control counts are just the control-typed rows of this project.
     cur.execute(
-        "SELECT DISTINCT s.SQR, s.SQRP "
-        "FROM samples s "
-        "JOIN visits v ON v.visit_id = s.visit_id "
-        "JOIN subjects sub ON sub.subject_id = v.subject_id "
-        "WHERE sub.project_id = ? AND s.sample_type = 'sample'",
+        "SELECT sm.sample_type, COUNT(*) FROM project_samples ps "
+        "JOIN samples sm ON sm.sample_id = ps.sample_id "
+        "WHERE ps.project_id = ? "
+        "AND sm.sample_type IN ('mockIP', 'anchor', 'NC') "
+        "GROUP BY sm.sample_type",
         (project_id,),
     )
-    pairs = cur.fetchall()
-    controls_by_type: dict[str, int] = {}
-    if pairs:
-        ctrl_types = ["mockIP", "anchor", "NC"]
-        ctype_ph = ",".join(["?"] * len(ctrl_types))
-        or_clauses = " OR ".join(["(s.SQR = ? AND s.SQRP = ?)"] * len(pairs))
-        ctrl_params: list[Any] = ctrl_types + [v for pair in pairs for v in pair]
-        cur.execute(
-            "SELECT s.sample_type, COUNT(*) "
-            "FROM samples s "
-            "JOIN visits v ON v.visit_id = s.visit_id "
-            "JOIN subjects sub ON sub.subject_id = v.subject_id "
-            f"WHERE s.sample_type IN ({ctype_ph}) AND ({or_clauses}) "
-            "GROUP BY s.sample_type",
-            tuple(ctrl_params),
-        )
-        controls_by_type = {st: int(n) for st, n in cur.fetchall()}
+    controls_by_type = {st: int(n) for st, n in cur.fetchall()}
 
     return {
         "project_id": project_id,
@@ -651,25 +575,32 @@ def find_db_files_missing_on_disk(
         ImportError: If pandas is not installed.
     """
     pd = _pd()
-    where = []
-    params: list[Any] = []
-    if project_id is not None:
-        where.append("s.project_id = ?")
-        params.append(project_id)
-    where_sql = (" WHERE " + " AND ".join(where)) if where else ""
-    cur.execute(
+    cols = (
         "SELECT f.file_id, f.sample_id, sm.sample_name, "
         "s.subject_code, v.timepoint, "
         "f.file_type, f.file_path, f.file_size_bytes, f.checksum_md5, "
         "f.storage_tier, f.created_at "
-        "FROM sample_files f "
-        "JOIN samples sm ON sm.sample_id = f.sample_id "
-        "JOIN visits v ON v.visit_id = sm.visit_id "
-        "JOIN subjects s ON s.subject_id = v.subject_id"
-        + where_sql
-        + " ORDER BY f.file_id",
-        tuple(params),
     )
+    if project_id is not None:
+        cur.execute(
+            cols
+            + "FROM project_samples ps "
+            "JOIN sample_files f ON f.sample_id = ps.sample_id "
+            "JOIN samples sm ON sm.sample_id = f.sample_id "
+            "JOIN visits v ON v.visit_id = sm.visit_id "
+            "JOIN subjects s ON s.subject_id = v.subject_id "
+            "WHERE ps.project_id = ? ORDER BY f.file_id",
+            (project_id,),
+        )
+    else:
+        cur.execute(
+            cols
+            + "FROM sample_files f "
+            "JOIN samples sm ON sm.sample_id = f.sample_id "
+            "JOIN visits v ON v.visit_id = sm.visit_id "
+            "JOIN subjects s ON s.subject_id = v.subject_id "
+            "ORDER BY f.file_id",
+        )
     rows = _fetch_dicts(cur)
     missing = [r for r in rows if not os.path.exists(r["file_path"])]
     return pd.DataFrame(missing)
@@ -762,11 +693,10 @@ def integrity_check(cur, project_id: int) -> dict[str, Any]:
     }
 
     cur.execute(
-        "SELECT sm.sample_id, sm.sample_name FROM samples sm "
-        "JOIN visits v ON v.visit_id = sm.visit_id "
-        "JOIN subjects s ON s.subject_id = v.subject_id "
+        "SELECT sm.sample_id, sm.sample_name FROM project_samples ps "
+        "JOIN samples sm ON sm.sample_id = ps.sample_id "
         "LEFT JOIN sample_files f ON f.sample_id = sm.sample_id "
-        "WHERE s.project_id = ? AND f.file_id IS NULL "
+        "WHERE ps.project_id = ? AND f.file_id IS NULL "
         "ORDER BY sm.sample_id",
         (project_id,),
     )
@@ -776,11 +706,9 @@ def integrity_check(cur, project_id: int) -> dict[str, Any]:
     ]
 
     cur.execute(
-        "SELECT f.file_id, f.file_path FROM sample_files f "
-        "JOIN samples sm ON sm.sample_id = f.sample_id "
-        "JOIN visits v ON v.visit_id = sm.visit_id "
-        "JOIN subjects s ON s.subject_id = v.subject_id "
-        "WHERE s.project_id = ? AND f.storage_tier = 'archive' "
+        "SELECT f.file_id, f.file_path FROM project_samples ps "
+        "JOIN sample_files f ON f.sample_id = ps.sample_id "
+        "WHERE ps.project_id = ? AND f.storage_tier = 'archive' "
         "AND f.checksum_md5 IS NULL",
         (project_id,),
     )
@@ -791,11 +719,9 @@ def integrity_check(cur, project_id: int) -> dict[str, Any]:
 
     cur.execute(
         "SELECT f.file_id, f.file_type, f.file_path, f.storage_tier "
-        "FROM sample_files f "
-        "JOIN samples sm ON sm.sample_id = f.sample_id "
-        "JOIN visits v ON v.visit_id = sm.visit_id "
-        "JOIN subjects s ON s.subject_id = v.subject_id "
-        "WHERE s.project_id = ?",
+        "FROM project_samples ps "
+        "JOIN sample_files f ON f.sample_id = ps.sample_id "
+        "WHERE ps.project_id = ?",
         (project_id,),
     )
     # Build a list of acceptable prefixes per tier. Both the raw (as

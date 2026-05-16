@@ -588,7 +588,10 @@ def get_connection() -> Iterator[mariadb.Connection]:
     try:
         yield conn
         conn.commit()
-    except Exception:
+    except BaseException:
+        # BaseException, not Exception: KeyboardInterrupt / SystemExit must
+        # also roll back, otherwise an interrupted transaction returns to the
+        # pool still holding its locks and stalls the next checkout.
         try:
             conn.rollback()
         except Exception:
